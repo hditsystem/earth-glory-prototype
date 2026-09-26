@@ -1,6 +1,6 @@
 # Earth Glory booking prototype
 
-A polished, responsive front-end concept for the friend-first beauty booking platform described in `Beauty Booking Platform Plan.md`.
+A polished, responsive, non-transactional front-end concept for Earth Glory, based on its current public Treatwell listing and the direction in `Beauty Booking Platform Plan.md`.
 
 ## What is included
 
@@ -8,16 +8,16 @@ A polished, responsive front-end concept for the friend-first beauty booking pla
 - Category filtering for treatment discovery
 - Four-step guest booking flow:
   1. treatment
-  2. therapist or first available
-  3. local date and time
-  4. contact details and policy consent
-- Clear treatment total, deposit and remaining balance
+  2. therapist (retained to illustrate a future multi-staff flow)
+  3. sample London date and time
+  4. sample contact details and prototype acknowledgement
+- Clear treatment price and deliberately unconfirmed payment terms
 - Explicit non-transactional confirmation state
 - Responsive desktop/mobile layouts and persistent mobile booking action
 - Keyboard-friendly controls, reduced-motion support and semantic landmarks
 - Original generated hero artwork bundled through `src/assets`
 
-All services, people, reviews, claims and contact details are visibly labelled as sample concept content. No booking, payment, email or SMS is sent.
+Selected services, durations, prices, public reviews and profile details are drawn from Earth Glory's public Treatwell pages as of 25 September 2026. They remain draft content until Avni approves them. The booking times are sample data; no appointment, payment, email or SMS is created or sent, and entered contact details remain only in the current browser session.
 
 ## Run locally
 
@@ -43,7 +43,9 @@ npm run build
 
 ## Production boundary
 
-This is the validated public-site and booking-flow prototype—not the production multi-tenant platform. Production work still requires the owner-approved Earth Glory catalogue and content, a database with tenant isolation, real availability/slot holds, authentication and roles, Stripe Connect, signed webhooks, transactional notifications, audit logs and the owner/staff dashboard described in the plan.
+This is a public-site and booking-flow prototype—not a validated production system. Production work still requires owner-approved content and policies, a confirmed launch jurisdiction and booking source of truth, a database with tenant isolation, server-side availability and slot holds, secure authentication and roles, approved payment architecture, signed webhooks, transactional notifications, audit logs, backup/restore testing, and the owner/staff dashboard.
+
+Public reference: [Earth Glory on Treatwell](https://earth-glory.mytreatwell.co.uk/). Do not treat the public listing as owner approval; verify the launch catalogue, venue instructions, opening hours, accessibility, cancellation terms and payment mode directly with Avni.
 
 The generated hero artwork was created with the built-in image generation tool using this final prompt:
 
