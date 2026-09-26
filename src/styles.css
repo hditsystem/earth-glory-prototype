@@ -146,6 +146,7 @@ button { color: inherit; }
 .review-source-card { grid-column: 1 / -1; padding: 35px; display: flex; align-items: center; justify-content: space-between; gap: 30px; border: 1px solid #e4d9cf; border-radius: 10px; background: rgba(255,255,255,.56); }
 .review-source-card p { max-width: 610px; margin: 0; color: #78685e; font-family: Georgia, serif; font-size: 16px; line-height: 1.65; }
 .review-source-card .button { flex: 0 0 auto; }
+.review-status { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 8px; color: #735c4f; font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
 .review-grid { margin-top: 50px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
 .review-grid blockquote { min-height: 320px; margin: 0; padding: 32px; display: flex; flex-direction: column; background: #f4eee6; }
 .review-grid blockquote:nth-child(2) { background: #e8d8ce; transform: translateY(16px); }

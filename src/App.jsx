@@ -163,7 +163,6 @@ function App() {
         </nav>
 
         <div className="header-actions">
-          <a className="text-button hide-mobile" href="https://earth-glory.mytreatwell.co.uk/" target="_blank" rel="noreferrer">Current listing</a>
           <button className="button button-dark hide-mobile" type="button" onClick={() => startBooking()}>
             Try booking
           </button>
@@ -226,7 +225,7 @@ function App() {
               <div className="eyebrow dark"><span /> Current service highlights</div>
               <h2>Find the right treatment for you.</h2>
             </div>
-            <p>This draft uses selected services, durations and GBP prices from Earth Glory’s current public menu. Avni should confirm the final launch catalogue.</p>
+            <p>Selected services, durations and GBP prices are included for review. Avni should confirm the final launch catalogue.</p>
           </div>
 
           <div className="category-tabs" role="list" aria-label="Treatment categories">
@@ -322,14 +321,12 @@ function App() {
         <section className="review-section" id="reviews">
           <div className="section-heading centered">
             <div className="eyebrow dark"><span /> Kind words</div>
-            <h2>See current client feedback.</h2>
+            <h2>Client feedback, with permission.</h2>
           </div>
           <div className="review-grid">
             <div className="review-source-card">
-              <p>Client feedback is already published on Earth Glory’s Treatwell profile. View the latest rating and reviews there.</p>
-              <a className="button button-dark" href="https://earth-glory.mytreatwell.co.uk/reviews.html" target="_blank" rel="noreferrer">
-                Read reviews on Treatwell <ArrowRight size={16} />
-              </a>
+              <p>Client feedback can be added here after Avni approves which reviews may be shown on the new website.</p>
+              <span className="review-status"><CheckCircle2 size={16} /> Owner approval needed</span>
             </div>
           </div>
         </section>
@@ -339,7 +336,7 @@ function App() {
             <div className="visit-copy">
               <div className="eyebrow light"><span /> Plan your visit</div>
               <h2>West Kensington,<br />London.</h2>
-              <p>Earth Glory’s current public listing gives the address below. Confirm the venue name and arrival instructions before launch.</p>
+              <p>The address below is included for owner review. Confirm the venue name and arrival instructions before launch.</p>
               <div className="visit-facts">
                 <div><MapPin size={18} /><span><strong>141 North End Road</strong><small>West Kensington, London W14 9NH</small></span></div>
                 <div><Clock3 size={18} /><span><strong>Open seven days</strong><small>Mon–Fri 10:00–19:30 · Sat 10:00–18:00 · Sun 10:00–17:00</small></span></div>
@@ -388,10 +385,10 @@ function App() {
         </div>
         <div className="footer-links">
           <div><strong>Explore</strong><a href="#treatments">Treatments</a><a href="#studio">Our studio</a><a href="#reviews">Kind words</a></div>
-          <div><strong>Useful</strong><a href="#visit">Visit & access</a><a href="#faq">Owner decisions</a><a href="https://earth-glory.mytreatwell.co.uk/" target="_blank" rel="noreferrer">Current Treatwell listing</a></div>
+          <div><strong>Useful</strong><a href="#visit">Visit & access</a><a href="#faq">Owner decisions</a></div>
           <div><strong>Contact</strong><p>141 North End Road, West Kensington, London W14 9NH</p><a href="tel:+447745241200">07745 241200</a><a href="mailto:earth.glory14@gmail.com">earth.glory14@gmail.com</a></div>
         </div>
-        <div className="footer-bottom"><span>© 2026 Earth Glory website concept</span><span>Owner review · No live booking or payment</span><span>Public-source content · Final approval required</span></div>
+        <div className="footer-bottom"><span>© 2026 Earth Glory website concept</span><span>Owner review · No live booking or payment</span><span>Draft content · Final approval required</span></div>
       </footer>
 
       <button className="mobile-book" type="button" onClick={() => startBooking()}>
@@ -487,7 +484,7 @@ function BookingDialog({ initialService, onClose }) {
                 <div className="booking-step">
                   <div className="eyebrow dark"><span /> Step two</div>
                   <h2>Your therapist.</h2>
-                  <p className="step-intro">Earth Glory’s current public listing shows Avni as the sole therapist.</p>
+                  <p className="step-intro">Earth Glory currently has Avni as its sole therapist.</p>
                   <div className="practitioner-grid single">
                     {practitioners.map((item) => (
                       <button key={item.id} className={practitioner.id === item.id ? 'practitioner-choice active' : 'practitioner-choice'} type="button" onClick={() => setPractitioner(item)}>
