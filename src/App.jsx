@@ -20,7 +20,6 @@ import {
   X,
 } from 'lucide-react'
 import heroImage from './assets/earth-glory-hero.png'
-import MarketplacePreview from './MarketplacePreview'
 
 const services = [
   {
@@ -139,13 +138,7 @@ function upcomingDates() {
   return days.slice(0, 5)
 }
 
-function requestedView() {
-  const params = new URLSearchParams(window.location.search)
-  return params.get('view') === 'marketplace' ? 'marketplace' : 'earth-glory'
-}
-
 function App() {
-  const [appView, setAppView] = useState(requestedView)
   const [bookingOpen, setBookingOpen] = useState(false)
   const [selectedService, setSelectedService] = useState(services[0])
   const [category, setCategory] = useState('All treatments')
@@ -159,13 +152,11 @@ function App() {
     : services.filter((service) => service.category === category)
 
   useEffect(() => {
-    const syncView = () => {
-      setBookingOpen(false)
-      setMenuOpen(false)
-      setAppView(requestedView())
+    const url = new URL(window.location.href)
+    if (url.searchParams.has('view')) {
+      url.searchParams.delete('view')
+      window.history.replaceState(window.history.state, '', url)
     }
-    window.addEventListener('popstate', syncView)
-    return () => window.removeEventListener('popstate', syncView)
   }, [])
 
   useEffect(() => {
@@ -186,43 +177,11 @@ function App() {
     setBookingOpen(true)
   }
 
-  function changeView(view) {
-    const url = new URL(window.location.href)
-    if (view === 'earth-glory' && window.history.state?.earthGloryPrototypeView === 'marketplace') {
-      window.history.back()
-      return
-    }
-
-    if (view === 'marketplace') {
-      url.searchParams.set('view', 'marketplace')
-      url.hash = ''
-      window.history.pushState({
-        ...(window.history.state || {}),
-        earthGloryPrototypeView: 'marketplace',
-      }, '', url)
-    } else {
-      url.searchParams.delete('view')
-      url.hash = ''
-      window.history.replaceState({
-        ...(window.history.state || {}),
-        earthGloryPrototypeView: 'earth-glory',
-      }, '', url)
-    }
-    setBookingOpen(false)
-    setMenuOpen(false)
-    setAppView(view)
-    window.scrollTo({ top: 0, behavior: 'auto' })
-  }
-
-  if (appView === 'marketplace') {
-    return <MarketplacePreview onBack={() => changeView('earth-glory')} />
-  }
-
   return (
     <div className="app-shell">
       <div className="concept-bar">
         <span>Feedback prototype</span>
-        <p>Earth Glory design-partner journey · Future Calgary marketplace preview · No live bookings, payments or payouts</p>
+        <p>Draft content · No live bookings or payments</p>
       </div>
 
       <header className="site-header">
@@ -239,7 +198,6 @@ function App() {
           <a href="#studio" onClick={() => setMenuOpen(false)}>Our studio</a>
           <a href="#reviews" onClick={() => setMenuOpen(false)}>Kind words</a>
           <a href="#visit" onClick={() => setMenuOpen(false)}>Visit</a>
-          <a href="#marketplace" onClick={() => setMenuOpen(false)}>Future platform</a>
         </nav>
 
         <div className="header-actions">
@@ -441,50 +399,6 @@ function App() {
           </div>
         </section>
 
-        <section className="section marketplace-bridge" id="marketplace">
-          <div className="marketplace-bridge-heading">
-            <div>
-              <div className="eyebrow light"><span /> Planned Calgary expansion</div>
-              <h2>One booking foundation.<br />Two ways to grow.</h2>
-            </div>
-            <p>
-              Earth Glory is the design partner for the direct-booking journey. A separate Calgary marketplace is planned for local discovery, provider operations, invoicing and traceable payouts.
-            </p>
-          </div>
-
-          <div className="marketplace-channel-preview">
-            <article>
-              <span className="bridge-number">01</span>
-              <div>
-                <small>Provider direct</small>
-                <h3>The business brings the client.</h3>
-                <p>A branded booking page, service catalogue, schedule and policies—with 0% marketplace commission planned on clients the provider brings directly. Other agreed provider-service fees may still apply.</p>
-              </div>
-            </article>
-            <article>
-              <span className="bridge-number">02</span>
-              <div>
-                <small>Marketplace acquired</small>
-                <h3>The platform creates discovery.</h3>
-                <p>Clients compare eligible Calgary providers, total price and availability that is rechecked before confirmation. Any marketplace-acquisition fee is agreed and disclosed before launch.</p>
-              </div>
-            </article>
-          </div>
-
-          <div className="marketplace-bridge-footer">
-            <div className="bridge-capabilities" aria-label="Planned platform capabilities">
-              <span><CalendarDays size={16} /> Booking source of truth</span>
-              <span><ShieldCheck size={16} /> Provider eligibility</span>
-              <span><LockKeyhole size={16} /> Invoice and refund trail</span>
-              <span><ArrowRight size={16} /> Earnings to payout status</span>
-            </div>
-            <button className="button button-cream button-large" type="button" onClick={() => changeView('marketplace')}>
-              Open Calgary marketplace preview <ArrowRight size={17} />
-            </button>
-          </div>
-          <p className="marketplace-bridge-note">Separate concept view · No Calgary providers, listings, bookings or financial activity are connected.</p>
-        </section>
-
         <section className="section faq-section" id="faq">
           <div className="faq-intro">
             <div className="eyebrow dark"><span /> Before you book</div>
@@ -517,10 +431,10 @@ function App() {
         </div>
         <div className="footer-links">
           <div><strong>Explore</strong><a href="#treatments">Treatments</a><a href="#studio">Our studio</a><a href="#reviews">Kind words</a></div>
-          <div><strong>Useful</strong><a href="#visit">Visit & access</a><a href="#faq">Before you book</a><button type="button" onClick={() => changeView('marketplace')}>Future Calgary platform</button></div>
+          <div><strong>Useful</strong><a href="#visit">Visit & access</a><a href="#faq">Before you book</a></div>
           <div><strong>Contact</strong><p>141 North End Road, West Kensington, London W14 9NH</p><a href="tel:+447745241200">07745 241200</a><a href="mailto:earth.glory14@gmail.com">earth.glory14@gmail.com</a></div>
         </div>
-        <div className="footer-bottom"><span>© 2026 Earth Glory website concept</span><span>Calgary marketplace planned</span><span>No live booking, payment, invoice or payout</span></div>
+        <div className="footer-bottom"><span>© 2026 Earth Glory website concept</span><span>Owner review</span><span>No live booking or payment</span></div>
       </footer>
 
       <button className="mobile-book" type="button" onClick={() => startBooking()}>

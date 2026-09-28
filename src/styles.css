@@ -63,7 +63,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .eyebrow > span { width: 31px; height: 1px; background: currentColor; }
 .eyebrow.light { color: #d4baaa; }
 .eyebrow.dark { color: #9c6e5c; }
-.hero h1, .section-heading h2, .ritual-copy h2, .meet-copy h2, .review-section h2, .visit-copy h2, .marketplace-bridge h2, .faq-intro h2, .booking-step h2, .booking-success h2 { font-family: 'Italiana', Georgia, serif; font-weight: 400; }
+.hero h1, .section-heading h2, .ritual-copy h2, .meet-copy h2, .review-section h2, .visit-copy h2, .faq-intro h2, .booking-step h2, .booking-success h2 { font-family: 'Italiana', Georgia, serif; font-weight: 400; }
 .hero h1 { margin: 20px 0 23px; font-size: clamp(64px, 7vw, 110px); line-height: .82; letter-spacing: -.035em; }
 .hero h1 em { color: #9c5c53; font-weight: 400; }
 .hero-content > p { width: min(470px, 100%); margin: 0; font-family: Georgia, serif; font-size: clamp(16px, 1.5vw, 20px); line-height: 1.65; color: #5c4a3e; }
@@ -180,23 +180,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .map-label { position: absolute; font-family: Georgia, serif; font-size: 12px; color: rgba(64,50,42,.42); }.label-one { top: 20%; left: 19%; }.label-two { bottom: 17%; right: 19%; }
 .map-pin { position: absolute; left: 54%; top: 45%; width: 68px; height: 68px; display: grid; place-items: center; background: #47342a; color: #fff; border-radius: 50% 50% 50% 5px; transform: rotate(-45deg); box-shadow: 0 16px 35px rgba(55,39,31,.24); }
 .map-pin span { transform: rotate(45deg); font-family: 'Italiana', Georgia, serif; font-size: 16px; }
-
-.marketplace-bridge { background: #30453b; color: #f3eee7; }
-.marketplace-bridge-heading { display: flex; align-items: end; justify-content: space-between; gap: 70px; }
-.marketplace-bridge-heading h2 { margin: 18px 0 0; font-size: clamp(48px, 5.4vw, 79px); line-height: .98; }
-.marketplace-bridge-heading > p { max-width: 470px; margin: 0 0 8px; color: #bdc9c2; font-family: Georgia, serif; font-size: 14px; line-height: 1.75; }
-.marketplace-channel-preview { margin-top: 54px; display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid rgba(255,255,255,.14); border-bottom: 1px solid rgba(255,255,255,.14); }
-.marketplace-channel-preview article { min-height: 300px; padding: 35px 40px 35px 0; display: grid; grid-template-columns: 44px 1fr; gap: 24px; }
-.marketplace-channel-preview article + article { padding-left: 40px; border-left: 1px solid rgba(255,255,255,.14); }
-.bridge-number { color: #9eb5aa; font-family: Georgia, serif; font-size: 11px; font-style: italic; }
-.marketplace-channel-preview article > div { display: flex; flex-direction: column; align-items: flex-start; }
-.marketplace-channel-preview small { color: #9eb5aa; font-size: 8px; letter-spacing: .16em; text-transform: uppercase; }
-.marketplace-channel-preview h3 { margin: 37px 0 14px; font-family: 'Italiana', Georgia, serif; font-size: clamp(31px, 3vw, 44px); font-weight: 400; line-height: 1.04; }
-.marketplace-channel-preview p { max-width: 540px; margin: 0; color: #b8c5be; font-size: 11px; line-height: 1.7; }
-.marketplace-bridge-footer { margin-top: 32px; display: flex; align-items: center; justify-content: space-between; gap: 35px; }
-.bridge-capabilities { display: flex; flex-wrap: wrap; gap: 13px 24px; }
-.bridge-capabilities span { display: inline-flex; align-items: center; gap: 7px; color: #c6d1cb; font-size: 10px; }
-.marketplace-bridge-note { margin: 20px 0 0; color: #91a49a; font-size: 8px; letter-spacing: .08em; text-transform: uppercase; }
 
 .faq-section { display: grid; grid-template-columns: .7fr 1.3fr; gap: clamp(70px, 10vw, 160px); background: #fffdf9; }
 .faq-intro h2 { margin: 18px 0 23px; font-size: clamp(43px, 4.3vw, 65px); line-height: 1.02; }
@@ -317,16 +300,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .meet-section { grid-template-columns: 1fr; gap: 55px; }.meet-copy h2 { font-size: 46px; }.portrait-card { max-width: 500px; }
   .review-section { padding: 82px 20px; }.review-section h2 { font-size: 44px; }.review-grid { grid-template-columns: 1fr; gap: 12px; }.review-grid blockquote, .review-grid blockquote:nth-child(3) { grid-column: auto; min-height: 280px; }
   .visit-card { grid-template-columns: 1fr; }.visit-copy { padding: 65px 25px; }.visit-map { min-height: 390px; }.visit-copy h2 { font-size: 52px; }
-  .marketplace-bridge-heading { align-items: flex-start; flex-direction: column; gap: 22px; }
-  .marketplace-bridge-heading h2 { font-size: 49px; }
-  .marketplace-bridge-heading > p { font-size: 13px; }
-  .marketplace-channel-preview { grid-template-columns: 1fr; }
-  .marketplace-channel-preview article, .marketplace-channel-preview article + article { min-height: 260px; padding: 30px 0; grid-template-columns: 31px 1fr; gap: 15px; border-left: 0; }
-  .marketplace-channel-preview article + article { border-top: 1px solid rgba(255,255,255,.14); }
-  .marketplace-channel-preview h3 { margin-top: 28px; font-size: 34px; }
-  .marketplace-bridge-footer { align-items: stretch; flex-direction: column; }
-  .marketplace-bridge-footer .button { width: 100%; }
-  .bridge-capabilities { flex-direction: column; }
   .faq-section { grid-template-columns: 1fr; gap: 55px; }.faq-intro h2 { font-size: 46px; }
   .site-footer { padding: 60px 22px 90px; }.footer-links { grid-template-columns: 1fr 1fr; gap: 45px 25px; }.footer-links > div:last-child { grid-column: 1 / -1; }.footer-bottom { flex-direction: column; gap: 8px; }
   .review-source-card { padding: 25px; flex-direction: column; align-items: flex-start; }
