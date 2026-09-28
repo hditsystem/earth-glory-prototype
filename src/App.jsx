@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
@@ -20,6 +20,7 @@ import {
   X,
 } from 'lucide-react'
 import heroImage from './assets/earth-glory-hero.png'
+import MarketplacePreview from './MarketplacePreview'
 
 const services = [
   {
@@ -101,49 +102,127 @@ const practitioners = [
 ]
 
 const faqs = [
-  ['What is the cancellation policy?', 'The cancellation window, late-cancellation fee and rescheduling rules need Avni’s approval before launch. The final wording should appear before a client confirms.'],
-  ['Will clients pay online?', 'Earth Glory can choose pay at venue, a fixed or percentage deposit, or full prepayment. No payment method should be advertised until it is configured and tested.'],
-  ['What should clients know before arrival?', 'Preparation, patch-test and arrival instructions should be set for each relevant treatment and included in the confirmation message.'],
-  ['Is step-free access available?', 'Accessibility and venue-access details should be verified with the location before they are published.'],
+  ['What is the cancellation policy?', 'Earth Glory is finalising its cancellation, rescheduling and late-cancellation terms. The complete policy will appear before a client confirms a live booking.'],
+  ['Will clients pay online?', 'The live booking journey will clearly show whether payment is due online or at the venue. No payment is taken in this prototype.'],
+  ['What should clients know before arrival?', 'Preparation, patch-test and arrival instructions will be shown for each relevant treatment and included in the booking confirmation.'],
+  ['Is step-free access available?', 'Accessibility and venue-access details are being confirmed and will be published before live booking opens.'],
 ]
 
 function formatMoney(value) {
   return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(value)
 }
 
+function formatLondonDate(date, options) {
+  return new Intl.DateTimeFormat('en-GB', { ...options, timeZone: 'Europe/London' }).format(date)
+}
+
+function dateKey(date) {
+  return date.toISOString().slice(0, 10)
+}
+
 function upcomingDates() {
   const days = []
-  const cursor = new Date()
+  const todayParts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/London',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).formatToParts(new Date())
+  const part = (type) => Number(todayParts.find((item) => item.type === type)?.value)
+  const cursor = new Date(Date.UTC(part('year'), part('month') - 1, part('day'), 12))
+
   for (let i = 1; i <= 7; i += 1) {
     const date = new Date(cursor)
-    date.setDate(cursor.getDate() + i)
+    date.setUTCDate(cursor.getUTCDate() + i)
     days.push(date)
   }
   return days.slice(0, 5)
 }
 
+function requestedView() {
+  const params = new URLSearchParams(window.location.search)
+  return params.get('view') === 'marketplace' ? 'marketplace' : 'earth-glory'
+}
+
 function App() {
+  const [appView, setAppView] = useState(requestedView)
   const [bookingOpen, setBookingOpen] = useState(false)
   const [selectedService, setSelectedService] = useState(services[0])
   const [category, setCategory] = useState('All treatments')
   const [menuOpen, setMenuOpen] = useState(false)
   const [openFaq, setOpenFaq] = useState(0)
+  const menuButtonRef = useRef(null)
 
   const categories = ['All treatments', ...new Set(services.map((service) => service.category))]
   const filteredServices = category === 'All treatments'
     ? services
     : services.filter((service) => service.category === category)
 
+  useEffect(() => {
+    const syncView = () => {
+      setBookingOpen(false)
+      setMenuOpen(false)
+      setAppView(requestedView())
+    }
+    window.addEventListener('popstate', syncView)
+    return () => window.removeEventListener('popstate', syncView)
+  }, [])
+
+  useEffect(() => {
+    if (!menuOpen) return undefined
+
+    const closeMenu = (event) => {
+      if (event.key === 'Escape') {
+        setMenuOpen(false)
+        window.requestAnimationFrame(() => menuButtonRef.current?.focus())
+      }
+    }
+    window.addEventListener('keydown', closeMenu)
+    return () => window.removeEventListener('keydown', closeMenu)
+  }, [menuOpen])
+
   function startBooking(service = services[0]) {
     setSelectedService(service)
     setBookingOpen(true)
+  }
+
+  function changeView(view) {
+    const url = new URL(window.location.href)
+    if (view === 'earth-glory' && window.history.state?.earthGloryPrototypeView === 'marketplace') {
+      window.history.back()
+      return
+    }
+
+    if (view === 'marketplace') {
+      url.searchParams.set('view', 'marketplace')
+      url.hash = ''
+      window.history.pushState({
+        ...(window.history.state || {}),
+        earthGloryPrototypeView: 'marketplace',
+      }, '', url)
+    } else {
+      url.searchParams.delete('view')
+      url.hash = ''
+      window.history.replaceState({
+        ...(window.history.state || {}),
+        earthGloryPrototypeView: 'earth-glory',
+      }, '', url)
+    }
+    setBookingOpen(false)
+    setMenuOpen(false)
+    setAppView(view)
+    window.scrollTo({ top: 0, behavior: 'auto' })
+  }
+
+  if (appView === 'marketplace') {
+    return <MarketplacePreview onBack={() => changeView('earth-glory')} />
   }
 
   return (
     <div className="app-shell">
       <div className="concept-bar">
         <span>Feedback prototype</span>
-        <p>Draft content · No live bookings or payments</p>
+        <p>Earth Glory design-partner journey · Future Calgary marketplace preview · No live bookings, payments or payouts</p>
       </div>
 
       <header className="site-header">
@@ -155,11 +234,12 @@ function App() {
           </span>
         </a>
 
-        <nav className={menuOpen ? 'nav-links is-open' : 'nav-links'} aria-label="Primary navigation">
+        <nav id="primary-navigation" className={menuOpen ? 'nav-links is-open' : 'nav-links'} aria-label="Primary navigation">
           <a href="#treatments" onClick={() => setMenuOpen(false)}>Treatments</a>
           <a href="#studio" onClick={() => setMenuOpen(false)}>Our studio</a>
           <a href="#reviews" onClick={() => setMenuOpen(false)}>Kind words</a>
           <a href="#visit" onClick={() => setMenuOpen(false)}>Visit</a>
+          <a href="#marketplace" onClick={() => setMenuOpen(false)}>Future platform</a>
         </nav>
 
         <div className="header-actions">
@@ -167,10 +247,12 @@ function App() {
             Try booking
           </button>
           <button
+            ref={menuButtonRef}
             className="menu-button"
             type="button"
             aria-label={menuOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={menuOpen}
+            aria-controls="primary-navigation"
             onClick={() => setMenuOpen((current) => !current)}
           >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
@@ -225,7 +307,7 @@ function App() {
               <div className="eyebrow dark"><span /> Current service highlights</div>
               <h2>Find the right treatment for you.</h2>
             </div>
-            <p>Selected services, durations and GBP prices are included for review. Avni should confirm the final launch catalogue.</p>
+            <p>Browse a sample of the treatment menu. Prices and availability remain draft until Earth Glory confirms the launch catalogue.</p>
           </div>
 
           <div className="category-tabs" role="list" aria-label="Treatment categories">
@@ -234,6 +316,7 @@ function App() {
                 key={item}
                 type="button"
                 className={category === item ? 'active' : ''}
+                aria-pressed={category === item}
                 onClick={() => setCategory(item)}
               >
                 {item}
@@ -281,7 +364,7 @@ function App() {
             <div className="eyebrow light"><span /> The Earth Glory approach</div>
             <h2>Professional care.<br />Personal attention.</h2>
             <p>
-              Avni brings professional training and more than 14 years of beauty-industry experience to each appointment. The final wording should reflect how she wants clients to describe the Earth Glory experience.
+              Avni brings professional training and more than 14 years of beauty-industry experience to each appointment. Every visit begins with a brief consultation so the treatment can reflect the client’s goals and comfort.
             </p>
             <div className="ritual-points">
               <div><span>01</span><p><strong>Start with a consultation</strong>Confirm goals, comfort and relevant sensitivities before treatment begins.</p></div>
@@ -321,12 +404,12 @@ function App() {
         <section className="review-section" id="reviews">
           <div className="section-heading centered">
             <div className="eyebrow dark"><span /> Kind words</div>
-            <h2>Client feedback, with permission.</h2>
+            <h2>A place for genuine client feedback.</h2>
           </div>
           <div className="review-grid">
             <div className="review-source-card">
-              <p>Client feedback can be added here after Avni approves which reviews may be shown on the new website.</p>
-              <span className="review-status"><CheckCircle2 size={16} /> Owner approval needed</span>
+              <p>Verified client feedback will appear here after Earth Glory confirms permission to publish it.</p>
+              <span className="review-status"><CheckCircle2 size={16} /> Awaiting approved reviews</span>
             </div>
           </div>
         </section>
@@ -336,7 +419,7 @@ function App() {
             <div className="visit-copy">
               <div className="eyebrow light"><span /> Plan your visit</div>
               <h2>West Kensington,<br />London.</h2>
-              <p>The address below is included for owner review. Confirm the venue name and arrival instructions before launch.</p>
+              <p>Venue details are shown for prototype feedback and will be confirmed before live booking opens.</p>
               <div className="visit-facts">
                 <div><MapPin size={18} /><span><strong>141 North End Road</strong><small>West Kensington, London W14 9NH</small></span></div>
                 <div><Clock3 size={18} /><span><strong>Open seven days</strong><small>Mon–Fri 10:00–19:30 · Sat 10:00–18:00 · Sun 10:00–17:00</small></span></div>
@@ -358,20 +441,69 @@ function App() {
           </div>
         </section>
 
+        <section className="section marketplace-bridge" id="marketplace">
+          <div className="marketplace-bridge-heading">
+            <div>
+              <div className="eyebrow light"><span /> Planned Calgary expansion</div>
+              <h2>One booking foundation.<br />Two ways to grow.</h2>
+            </div>
+            <p>
+              Earth Glory is the design partner for the direct-booking journey. A separate Calgary marketplace is planned for local discovery, provider operations, invoicing and traceable payouts.
+            </p>
+          </div>
+
+          <div className="marketplace-channel-preview">
+            <article>
+              <span className="bridge-number">01</span>
+              <div>
+                <small>Provider direct</small>
+                <h3>The business brings the client.</h3>
+                <p>A branded booking page, service catalogue, schedule and policies—with 0% marketplace commission planned on clients the provider brings directly. Other agreed provider-service fees may still apply.</p>
+              </div>
+            </article>
+            <article>
+              <span className="bridge-number">02</span>
+              <div>
+                <small>Marketplace acquired</small>
+                <h3>The platform creates discovery.</h3>
+                <p>Clients compare eligible Calgary providers, total price and availability that is rechecked before confirmation. Any marketplace-acquisition fee is agreed and disclosed before launch.</p>
+              </div>
+            </article>
+          </div>
+
+          <div className="marketplace-bridge-footer">
+            <div className="bridge-capabilities" aria-label="Planned platform capabilities">
+              <span><CalendarDays size={16} /> Booking source of truth</span>
+              <span><ShieldCheck size={16} /> Provider eligibility</span>
+              <span><LockKeyhole size={16} /> Invoice and refund trail</span>
+              <span><ArrowRight size={16} /> Earnings to payout status</span>
+            </div>
+            <button className="button button-cream button-large" type="button" onClick={() => changeView('marketplace')}>
+              Open Calgary marketplace preview <ArrowRight size={17} />
+            </button>
+          </div>
+          <p className="marketplace-bridge-note">Separate concept view · No Calgary providers, listings, bookings or financial activity are connected.</p>
+        </section>
+
         <section className="section faq-section" id="faq">
           <div className="faq-intro">
-            <div className="eyebrow dark"><span /> Owner decisions</div>
-            <h2>Details to confirm<br />before launch.</h2>
-            <p>These choices should be approved by Avni before the site accepts real bookings.</p>
+            <div className="eyebrow dark"><span /> Before you book</div>
+            <h2>Details being finalised<br />before booking opens.</h2>
+            <p>Earth Glory will confirm these details before the site accepts real bookings.</p>
             <a href="mailto:earth.glory14@gmail.com"><Mail size={16} /> Email Earth Glory</a>
           </div>
           <div className="faq-list">
             {faqs.map(([question, answer], index) => (
               <div className={openFaq === index ? 'faq-item open' : 'faq-item'} key={question}>
-                <button type="button" onClick={() => setOpenFaq(openFaq === index ? -1 : index)} aria-expanded={openFaq === index}>
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(openFaq === index ? -1 : index)}
+                  aria-expanded={openFaq === index}
+                  aria-controls={`faq-answer-${index}`}
+                >
                   <span>{question}</span><ChevronDown size={20} />
                 </button>
-                <div className="faq-answer"><p>{answer}</p></div>
+                <div id={`faq-answer-${index}`} className="faq-answer" aria-hidden={openFaq !== index}><p>{answer}</p></div>
               </div>
             ))}
           </div>
@@ -385,10 +517,10 @@ function App() {
         </div>
         <div className="footer-links">
           <div><strong>Explore</strong><a href="#treatments">Treatments</a><a href="#studio">Our studio</a><a href="#reviews">Kind words</a></div>
-          <div><strong>Useful</strong><a href="#visit">Visit & access</a><a href="#faq">Owner decisions</a></div>
+          <div><strong>Useful</strong><a href="#visit">Visit & access</a><a href="#faq">Before you book</a><button type="button" onClick={() => changeView('marketplace')}>Future Calgary platform</button></div>
           <div><strong>Contact</strong><p>141 North End Road, West Kensington, London W14 9NH</p><a href="tel:+447745241200">07745 241200</a><a href="mailto:earth.glory14@gmail.com">earth.glory14@gmail.com</a></div>
         </div>
-        <div className="footer-bottom"><span>© 2026 Earth Glory website concept</span><span>Owner review · No live booking or payment</span><span>Draft content · Final approval required</span></div>
+        <div className="footer-bottom"><span>© 2026 Earth Glory website concept</span><span>Calgary marketplace planned</span><span>No live booking, payment, invoice or payout</span></div>
       </footer>
 
       <button className="mobile-book" type="button" onClick={() => startBooking()}>
@@ -409,49 +541,106 @@ function App() {
 function BookingDialog({ initialService, onClose }) {
   const [step, setStep] = useState(1)
   const [service, setService] = useState(initialService)
-  const [practitioner, setPractitioner] = useState(practitioners[0])
+  const practitioner = practitioners[0]
   const dates = useMemo(() => upcomingDates(), [])
   const [date, setDate] = useState(dates[0])
   const [time, setTime] = useState('11:30 AM')
   const [details, setDetails] = useState({ name: '', email: '', phone: '', consent: false })
   const [submitted, setSubmitted] = useState(false)
+  const dialogRef = useRef(null)
+  const closeButtonRef = useRef(null)
+  const returnFocusRef = useRef(null)
+  const successTitleRef = useRef(null)
+  const stepTitleRef = useRef(null)
+  const previousStepRef = useRef(step)
   const times = ['9:00 AM', '10:15 AM', '11:30 AM', '1:45 PM', '3:00 PM', '5:15 PM']
 
   useEffect(() => {
+    returnFocusRef.current = document.activeElement
+
     const onKeyDown = (event) => {
-      if (event.key === 'Escape') onClose()
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        onClose()
+        return
+      }
+
+      if (event.key !== 'Tab') return
+      const focusable = dialogRef.current?.querySelectorAll(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )
+      if (!focusable?.length) return
+      const first = focusable[0]
+      const last = focusable[focusable.length - 1]
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
     }
+
     document.body.classList.add('modal-open')
     window.addEventListener('keydown', onKeyDown)
+    closeButtonRef.current?.focus()
+
     return () => {
       document.body.classList.remove('modal-open')
       window.removeEventListener('keydown', onKeyDown)
+      returnFocusRef.current?.focus?.()
     }
   }, [onClose])
 
-  const canContinue = step < 4 || (details.name && details.email && details.phone && details.consent)
+  useEffect(() => {
+    if (submitted) successTitleRef.current?.focus()
+  }, [submitted])
+
+  useEffect(() => {
+    if (!submitted && previousStepRef.current !== step) {
+      previousStepRef.current = step
+      stepTitleRef.current?.focus()
+    }
+  }, [step, submitted])
 
   function goNext() {
     if (step < 4) setStep((current) => current + 1)
-    else if (canContinue) setSubmitted(true)
+    else setSubmitted(true)
   }
 
   return (
     <div className="booking-overlay" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <div className="booking-dialog" role="dialog" aria-modal="true" aria-label="Booking prototype">
-        <button className="dialog-close" type="button" onClick={onClose} aria-label="Close booking"><X size={20} /></button>
+      <div
+        ref={dialogRef}
+        className="booking-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="booking-dialog-title"
+        aria-describedby="booking-dialog-description"
+      >
+        <button ref={closeButtonRef} className="dialog-close" type="button" onClick={onClose} aria-label="Close booking"><X size={20} /></button>
 
         {submitted ? (
           <div className="booking-success">
             <div className="success-icon"><Check size={28} /></div>
             <div className="eyebrow dark"><span /> Prototype complete</div>
-            <h2>That’s the full booking journey.</h2>
-            <p>No appointment or payment has been created. In the live service, Earth Glory would confirm the booking only after its availability, payment and policy rules are applied.</p>
+            <h2 ref={successTitleRef} id="booking-dialog-title" tabIndex="-1">That’s the full booking journey.</h2>
+            <p id="booking-dialog-description">No appointment or payment has been created. A live service would first recheck availability, apply Earth Glory’s approved payment and policy rules, and then create a traceable booking record.</p>
             <div className="success-card">
               <div><small>Treatment</small><strong>{service.name}</strong></div>
-              <div><small>Date & time</small><strong>{date.toLocaleDateString('en-GB', { weekday: 'long', month: 'long', day: 'numeric' })} · {time}</strong></div>
+              <div><small>Date & time</small><strong>{formatLondonDate(date, { weekday: 'long', month: 'long', day: 'numeric' })} · {time}</strong></div>
               <div><small>Therapist</small><strong>{practitioner.name}</strong></div>
               <div><small>Due today</small><strong>No payment in prototype</strong></div>
+            </div>
+            <div className="success-records" aria-label="Records a live booking may create">
+              <strong>Records created only when relevant</strong>
+              <div>
+                <span><CheckCircle2 size={15} /> Always: appointment and confirmation</span>
+                <span><CheckCircle2 size={15} /> After payment: provider receipt</span>
+                <span><CheckCircle2 size={15} /> After a refund: refund record</span>
+                <span><CheckCircle2 size={15} /> Processor-paid orders: earnings and payout status</span>
+              </div>
             </div>
             <button className="button button-dark button-large full-width" type="button" onClick={onClose}>Return to the website</button>
             <small className="demo-note">Sample journey only — details were not submitted.</small>
@@ -459,18 +648,24 @@ function BookingDialog({ initialService, onClose }) {
         ) : (
           <>
             <div className="booking-main">
-              <div className="booking-progress-mobile">
-                <span>Step {step} of 4</span><strong>{['Treatment', 'Therapist', 'Date & time', 'Your details'][step - 1]}</strong>
+              <div className="booking-progress-mobile" aria-live="polite">
+                <span>Step {step} of 4</span><strong>{['Treatment', 'Date & time', 'Your details', 'Review'][step - 1]}</strong>
               </div>
 
               {step === 1 && (
                 <div className="booking-step">
                   <div className="eyebrow dark"><span /> Step one</div>
-                  <h2>Choose a treatment.</h2>
-                  <p className="step-intro">Select one service to continue.</p>
+                  <h2 ref={stepTitleRef} id="booking-dialog-title" tabIndex="-1">Choose a treatment.</h2>
+                  <p id="booking-dialog-description" className="step-intro">Select one sample service to continue.</p>
                   <div className="choice-list service-choice-list">
                     {services.map((item) => (
-                      <button key={item.id} className={service.id === item.id ? 'choice active' : 'choice'} type="button" onClick={() => setService(item)}>
+                      <button
+                        key={item.id}
+                        className={service.id === item.id ? 'choice active' : 'choice'}
+                        type="button"
+                        aria-pressed={service.id === item.id}
+                        onClick={() => setService(item)}
+                      >
                         <span className="choice-radio">{service.id === item.id && <span />}</span>
                         <span className="choice-copy"><strong>{item.name}</strong><small>{item.description}</small><em><Clock3 size={13} /> {item.duration} min</em></span>
                         <span className="choice-price">{formatMoney(item.price)}</span>
@@ -483,57 +678,76 @@ function BookingDialog({ initialService, onClose }) {
               {step === 2 && (
                 <div className="booking-step">
                   <div className="eyebrow dark"><span /> Step two</div>
-                  <h2>Your therapist.</h2>
-                  <p className="step-intro">Earth Glory currently has Avni as its sole therapist.</p>
-                  <div className="practitioner-grid single">
-                    {practitioners.map((item) => (
-                      <button key={item.id} className={practitioner.id === item.id ? 'practitioner-choice active' : 'practitioner-choice'} type="button" onClick={() => setPractitioner(item)}>
-                        <span className="practitioner-avatar">{item.initials}</span>
-                        <span><strong>{item.name}</strong><em>{item.role}</em><small>{item.specialties}</small></span>
-                        <span className="choice-radio">{practitioner.id === item.id && <span />}</span>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="booking-help"><Sparkles size={18} /><p><strong>Single-provider flow</strong>The live site can skip this step while one therapist is bookable; keep it only if additional staff are added.</p></div>
-                </div>
-              )}
-
-              {step === 3 && (
-                <div className="booking-step">
-                  <div className="eyebrow dark"><span /> Step three</div>
-                  <h2>Choose a date and time.</h2>
-                  <p className="step-intro">Sample times are shown in London time (Europe/London).</p>
+                  <h2 ref={stepTitleRef} id="booking-dialog-title" tabIndex="-1">Choose a date and time.</h2>
+                  <p id="booking-dialog-description" className="step-intro">Sample times are shown in London time. They are not connected to Avni’s calendar.</p>
                   <div className="date-strip">
                     {dates.map((item) => (
-                      <button key={item.toISOString()} className={date.toDateString() === item.toDateString() ? 'active' : ''} type="button" onClick={() => setDate(item)}>
-                        <small>{item.toLocaleDateString('en-GB', { weekday: 'short' })}</small>
-                        <strong>{item.getDate()}</strong>
-                        <span>{item.toLocaleDateString('en-GB', { month: 'short' })}</span>
+                      <button
+                        key={item.toISOString()}
+                        className={dateKey(date) === dateKey(item) ? 'active' : ''}
+                        type="button"
+                        aria-pressed={dateKey(date) === dateKey(item)}
+                        onClick={() => setDate(item)}
+                      >
+                        <small>{formatLondonDate(item, { weekday: 'short' })}</small>
+                        <strong>{formatLondonDate(item, { day: 'numeric' })}</strong>
+                        <span>{formatLondonDate(item, { month: 'short' })}</span>
                       </button>
                     ))}
                   </div>
                   <div className="time-label"><span>Sample times</span><small><span className="pulse-dot" /> Prototype data</small></div>
                   <div className="time-grid">
                     {times.map((item, index) => (
-                      <button key={item} disabled={index === 0} className={time === item ? 'active' : ''} type="button" onClick={() => setTime(item)}>{item}{index === 0 && <small>Example unavailable</small>}</button>
+                      <button
+                        key={item}
+                        disabled={index === 0}
+                        className={time === item ? 'active' : ''}
+                        type="button"
+                        aria-pressed={time === item}
+                        onClick={() => setTime(item)}
+                      >
+                        {item}{index === 0 && <small>Example unavailable</small>}
+                      </button>
                     ))}
                   </div>
                   <div className="booking-help"><Clock3 size={18} /><p>In the live service, the server would recheck availability and temporarily reserve the selected time during checkout.</p></div>
                 </div>
               )}
 
-              {step === 4 && (
+              {step === 3 && (
                 <div className="booking-step">
-                  <div className="eyebrow dark"><span /> Final step</div>
-                  <h2>Enter your details.</h2>
-                  <p className="step-intro">All fields are required. Use sample details only; this prototype does not submit or store them.</p>
-                  <div className="details-form">
+                  <div className="eyebrow dark"><span /> Step three</div>
+                  <h2 ref={stepTitleRef} id="booking-dialog-title" tabIndex="-1">Enter your details.</h2>
+                  <p id="booking-dialog-description" className="step-intro">All fields are required. Use sample details only; nothing is submitted or stored.</p>
+                  <form id="booking-details-form" className="details-form" onSubmit={(event) => { event.preventDefault(); goNext() }}>
                     <label><span>Full name</span><input required value={details.name} onChange={(event) => setDetails({ ...details, name: event.target.value })} autoComplete="name" placeholder="Your name" /></label>
                     <label><span>Email address</span><input required value={details.email} onChange={(event) => setDetails({ ...details, email: event.target.value })} autoComplete="email" type="email" placeholder="you@example.com" /></label>
                     <label><span>Mobile number</span><input required value={details.phone} onChange={(event) => setDetails({ ...details, phone: event.target.value })} autoComplete="tel" type="tel" placeholder="07700 900000" /></label>
-                    <label className="checkbox-label"><input checked={details.consent} onChange={(event) => setDetails({ ...details, consent: event.target.checked })} type="checkbox" /><span>I understand this is a non-transactional prototype and no appointment will be created.</span></label>
+                    <label className="checkbox-label"><input required checked={details.consent} onChange={(event) => setDetails({ ...details, consent: event.target.checked })} type="checkbox" /><span>I understand this is a non-transactional prototype and no appointment will be created.</span></label>
+                  </form>
+                  <div className="secure-note"><LockKeyhole size={17} /><span><strong>Prototype only</strong>These details remain only in the open booking flow and are discarded when it closes.</span></div>
+                </div>
+              )}
+
+              {step === 4 && (
+                <div className="booking-step">
+                  <div className="eyebrow dark"><span /> Final step</div>
+                  <h2 ref={stepTitleRef} id="booking-dialog-title" tabIndex="-1">Review before you finish.</h2>
+                  <p id="booking-dialog-description" className="step-intro">This is the point where a live service would show the complete order, policy and payment commitment.</p>
+                  <div className="booking-review">
+                    <dl>
+                      <div><dt>Service provider</dt><dd>Earth Glory · {practitioner.name}</dd></div>
+                      <div><dt>Treatment</dt><dd>{service.name} · {service.duration} minutes</dd></div>
+                      <div><dt>Date & time</dt><dd>{formatLondonDate(date, { weekday: 'long', month: 'long', day: 'numeric' })} · {time}</dd></div>
+                      <div><dt>Venue</dt><dd>141 North End Road · West Kensington, London</dd></div>
+                      <div><dt>Treatment price</dt><dd>{formatMoney(service.price)}</dd></div>
+                      <div><dt>Payment today</dt><dd>None in this prototype</dd></div>
+                    </dl>
+                    <div className="review-policy">
+                      <ShieldCheck size={19} />
+                      <p><strong>Policies still require owner approval.</strong>The live confirmation action must show accepted cancellation, refund and payment terms before creating an appointment.</p>
+                    </div>
                   </div>
-                  <div className="secure-note"><LockKeyhole size={17} /><span><strong>Prototype only</strong>Contact details remain in this browser session and are discarded when you close the booking flow.</span></div>
                 </div>
               )}
             </div>
@@ -548,8 +762,8 @@ function BookingDialog({ initialService, onClose }) {
                 <h3>{service.name}</h3>
                 <ul>
                   <li><Clock3 size={16} /><span><small>Duration</small><strong>{service.duration} minutes</strong></span></li>
-                  {step >= 2 && <li><UserRound size={16} /><span><small>Therapist</small><strong>{practitioner.name}</strong></span></li>}
-                  {step >= 3 && <li><CalendarDays size={16} /><span><small>Date & time</small><strong>{date.toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })} · {time}</strong></span></li>}
+                  <li><UserRound size={16} /><span><small>Therapist</small><strong>{practitioner.name}</strong></span></li>
+                  {step >= 2 && <li><CalendarDays size={16} /><span><small>Date & time</small><strong>{formatLondonDate(date, { month: 'short', day: 'numeric' })} · {time}</strong></span></li>}
                 </ul>
               </div>
               <div className="summary-total">
@@ -564,7 +778,12 @@ function BookingDialog({ initialService, onClose }) {
                 <ArrowLeft size={17} /> {step === 1 ? 'Close' : 'Back'}
               </button>
               <div className="step-dots" aria-hidden="true">{[1, 2, 3, 4].map((item) => <span key={item} className={item <= step ? 'active' : ''} />)}</div>
-              <button className="button button-dark" disabled={!canContinue} type="button" onClick={goNext}>
+              <button
+                className="button button-dark"
+                type={step === 3 ? 'submit' : 'button'}
+                form={step === 3 ? 'booking-details-form' : undefined}
+                onClick={step === 3 ? undefined : goNext}
+              >
                 {step === 4 ? 'Complete prototype' : 'Continue'} <ArrowRight size={16} />
               </button>
             </div>
