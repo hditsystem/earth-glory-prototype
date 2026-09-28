@@ -20,6 +20,9 @@ import {
   X,
 } from 'lucide-react'
 import heroImage from './assets/earth-glory-hero.png'
+import { RoleSwitcher, RoleWorkspace } from './RoleViews'
+
+const prototypeRoleIds = ['guest', 'client', 'practitioner', 'owner']
 
 const services = [
   {
@@ -138,12 +141,18 @@ function upcomingDates() {
   return days.slice(0, 5)
 }
 
+function roleFromLocation() {
+  const requestedRole = new URL(window.location.href).searchParams.get('role')
+  return prototypeRoleIds.includes(requestedRole) ? requestedRole : 'guest'
+}
+
 function App() {
   const [bookingOpen, setBookingOpen] = useState(false)
   const [selectedService, setSelectedService] = useState(services[0])
   const [category, setCategory] = useState('All treatments')
   const [menuOpen, setMenuOpen] = useState(false)
   const [openFaq, setOpenFaq] = useState(0)
+  const [activeRole, setActiveRole] = useState(roleFromLocation)
   const menuButtonRef = useRef(null)
 
   const categories = ['All treatments', ...new Set(services.map((service) => service.category))]
@@ -153,10 +162,25 @@ function App() {
 
   useEffect(() => {
     const url = new URL(window.location.href)
+    let shouldReplaceUrl = false
     if (url.searchParams.has('view')) {
       url.searchParams.delete('view')
-      window.history.replaceState(window.history.state, '', url)
+      shouldReplaceUrl = true
     }
+    if (url.searchParams.has('role') && !prototypeRoleIds.includes(url.searchParams.get('role'))) {
+      url.searchParams.delete('role')
+      shouldReplaceUrl = true
+    }
+    if (shouldReplaceUrl) window.history.replaceState(window.history.state, '', url)
+
+    const handleHistoryChange = () => {
+      setActiveRole(roleFromLocation())
+      setBookingOpen(false)
+      setMenuOpen(false)
+    }
+
+    window.addEventListener('popstate', handleHistoryChange)
+    return () => window.removeEventListener('popstate', handleHistoryChange)
   }, [])
 
   useEffect(() => {
@@ -177,13 +201,31 @@ function App() {
     setBookingOpen(true)
   }
 
+  function switchRole(role) {
+    if (!prototypeRoleIds.includes(role)) return
+
+    const url = new URL(window.location.href)
+    url.searchParams.delete('view')
+    if (role === 'guest') url.searchParams.delete('role')
+    else url.searchParams.set('role', role)
+    window.history.pushState({ ...window.history.state, prototypeRole: role }, '', url)
+    setActiveRole(role)
+    setBookingOpen(false)
+    setMenuOpen(false)
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   return (
     <div className="app-shell">
       <div className="concept-bar">
         <span>Feedback prototype</span>
-        <p>Draft content · No live bookings or payments</p>
+        <p>Four connected user views · No live bookings or payments</p>
       </div>
 
+      <RoleSwitcher activeRole={activeRole} onChange={switchRole} />
+
+      {activeRole === 'guest' ? (
+        <>
       <header className="site-header">
         <a className="brand" href="#top" aria-label="Earth Glory home">
           <span className="brand-mark">EG</span>
@@ -201,6 +243,7 @@ function App() {
         </nav>
 
         <div className="header-actions">
+          <button className="text-button" type="button" onClick={() => switchRole('client')}>Client portal</button>
           <button className="button button-dark hide-mobile" type="button" onClick={() => startBooking()}>
             Try booking
           </button>
@@ -442,9 +485,15 @@ function App() {
         <strong>Try it <ArrowRight size={16} /></strong>
       </button>
 
+        </>
+      ) : (
+        <RoleWorkspace key={activeRole} role={activeRole} onStartBooking={() => startBooking()} />
+      )}
+
       {bookingOpen && (
         <BookingDialog
           initialService={selectedService}
+          visitorType={activeRole === 'client' ? 'client' : 'guest'}
           onClose={() => setBookingOpen(false)}
         />
       )}
@@ -452,14 +501,16 @@ function App() {
   )
 }
 
-function BookingDialog({ initialService, onClose }) {
+function BookingDialog({ initialService, visitorType = 'guest', onClose }) {
   const [step, setStep] = useState(1)
   const [service, setService] = useState(initialService)
   const practitioner = practitioners[0]
   const dates = useMemo(() => upcomingDates(), [])
   const [date, setDate] = useState(dates[0])
   const [time, setTime] = useState('11:30 AM')
-  const [details, setDetails] = useState({ name: '', email: '', phone: '', consent: false })
+  const [details, setDetails] = useState(visitorType === 'client'
+    ? { name: 'Maya Thompson', email: 'maya@example.com', phone: '07700 900123', consent: false }
+    : { name: '', email: '', phone: '', consent: false })
   const [submitted, setSubmitted] = useState(false)
   const dialogRef = useRef(null)
   const closeButtonRef = useRef(null)
@@ -631,8 +682,8 @@ function BookingDialog({ initialService, onClose }) {
               {step === 3 && (
                 <div className="booking-step">
                   <div className="eyebrow dark"><span /> Step three</div>
-                  <h2 ref={stepTitleRef} id="booking-dialog-title" tabIndex="-1">Enter your details.</h2>
-                  <p id="booking-dialog-description" className="step-intro">All fields are required. Use sample details only; nothing is submitted or stored.</p>
+                  <h2 ref={stepTitleRef} id="booking-dialog-title" tabIndex="-1">{visitorType === 'client' ? 'Confirm your details.' : 'Enter your details.'}</h2>
+                  <p id="booking-dialog-description" className="step-intro">{visitorType === 'client' ? 'Your sample client details are prefilled for this signed-in journey.' : 'No account is required. Use sample details only; nothing is submitted or stored.'}</p>
                   <form id="booking-details-form" className="details-form" onSubmit={(event) => { event.preventDefault(); goNext() }}>
                     <label><span>Full name</span><input required value={details.name} onChange={(event) => setDetails({ ...details, name: event.target.value })} autoComplete="name" placeholder="Your name" /></label>
                     <label><span>Email address</span><input required value={details.email} onChange={(event) => setDetails({ ...details, email: event.target.value })} autoComplete="email" type="email" placeholder="you@example.com" /></label>

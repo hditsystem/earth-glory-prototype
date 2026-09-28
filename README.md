@@ -16,10 +16,18 @@ A polished, responsive, non-transactional front-end concept for Earth Glory.
 - Responsive desktop/mobile layouts and persistent mobile booking action
 - Keyboard-friendly controls, trapped and restored modal focus, reduced-motion support and semantic landmarks
 - Original generated hero artwork bundled through `src/assets`
+- Four connected feedback views using one shared sample appointment:
+  1. Guest discovery and no-account booking
+  2. Client appointment self-service, receipts and preferences
+  3. Practitioner schedule, client brief and appointment-status workflow
+  4. Owner calendar, services, clients, payments, reports and settings
+- Shareable role previews through `?role=client`, `?role=practitioner` and `?role=owner`; the clean URL opens the Guest view
 
 Selected services, durations, prices and profile details remain draft content until Avni approves them. The booking times are sample data; no appointment, payment, email or SMS is created or sent, and entered contact details remain only in the open booking flow.
 
 The future marketplace concept source is retained in `src/MarketplacePreview.jsx` but is intentionally not linked or included in the public build during the Earth Glory feedback round.
+
+Guest is a no-account state in the client journey, not a stored authorization role. In a live system, Client, Practitioner and Owner access must be authenticated and enforced on the server; the visible role switcher is only for prototype feedback.
 
 ## Run locally
 
