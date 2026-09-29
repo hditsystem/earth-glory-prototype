@@ -738,7 +738,7 @@ function OwnerBookingConnection() {
             <div><small>Current booking provider</small><h2>{LIVE_BOOKING_PROVIDER.name}</h2><p>{LIVE_BOOKING_PROVIDER.accountStatus}</p></div>
             <Status>Configured</Status>
           </div>
-          <p className="booking-provider-summary">Treatwell remains the source of truth for real availability and appointments. The Earth Glory website sends live clients to the official booking flow instead of creating a second live calendar.</p>
+          <p className="booking-provider-summary">For this transition prototype, Treatwell is treated as the source of truth for real availability and appointments. The Earth Glory website sends live clients to the official booking flow instead of creating a second live calendar.</p>
           <p className="connection-monitoring-note">Configuration status only. This static prototype does not monitor the Treatwell listing or account health.</p>
           <dl className="connection-status-list">
             <div><dt>Live booking link</dt><dd><Status>Configured</Status></dd></div>

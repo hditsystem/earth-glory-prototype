@@ -740,8 +740,8 @@ function App() {
                       <strong>{formatMoney(service.price)}</strong>
                       <span><Clock3 size={14} /> {service.duration} min + {service.bufferAfter} min reset</span>
                     </div>
-                    <a href={LIVE_BOOKING_PROVIDER.bookingUrl} target="_blank" rel="noopener noreferrer" aria-label={`Check current ${service.name} availability on Treatwell`}>
-                      Check live <ArrowRight size={16} />
+                    <a href={LIVE_BOOKING_PROVIDER.bookingUrl} target="_blank" rel="noopener noreferrer" aria-label="View current Treatwell services and availability">
+                      View on Treatwell <ArrowRight size={16} />
                     </a>
                   </div>
                 </article>
@@ -952,12 +952,13 @@ function BookingDialog({
     ? { ...existingAppointment.client, consent: false, marketing: false }
     : visitorType === 'client'
       ? { ...clientDetails, consent: false, marketing: false }
-    : { name: '', email: '', phone: '', consent: false })
+    : { name: 'Alex Example', email: 'alex@example.com', phone: '07700 900000', consent: false, marketing: false })
   const [submitted, setSubmitted] = useState(false)
   const [policyAccepted, setPolicyAccepted] = useState(false)
   const [completedAppointment, setCompletedAppointment] = useState(null)
   const dialogRef = useRef(null)
   const closeButtonRef = useRef(null)
+  const detailsFormRef = useRef(null)
   const returnFocusRef = useRef(null)
   const successTitleRef = useRef(null)
   const stepTitleRef = useRef(null)
@@ -1050,7 +1051,7 @@ function BookingDialog({
             <div className="success-icon"><Check size={28} /></div>
             <div className="eyebrow dark"><span /> Preview complete</div>
             <h2 ref={successTitleRef} id="booking-dialog-title" tabIndex="-1">{mode === 'reschedule' ? 'Change preview complete—Treatwell was not updated.' : 'No appointment was booked.'}</h2>
-            <p id="booking-dialog-description">This sample now appears in the Client, Practitioner and Owner prototype views so you can review the proposed workflow. Treatwell remains Earth Glory’s live calendar; nothing was charged, submitted or sent.</p>
+            <p id="booking-dialog-description">This sample now appears in the Client, Practitioner and Owner prototype views so you can review the proposed workflow. During this prototype transition, live booking continues on Treatwell; nothing was charged, submitted or sent.</p>
             <div className="success-card">
               <div><small>Reference</small><strong>{completedAppointment?.reference}</strong></div>
               <div><small>Treatment</small><strong>{completedAppointment?.service.name}</strong></div>
@@ -1148,13 +1149,13 @@ function BookingDialog({
                 <div className="booking-step">
                   <div className="eyebrow dark"><span /> Step three</div>
                   <h2 ref={stepTitleRef} id="booking-dialog-title" tabIndex="-1">{visitorType === 'client' ? 'Confirm your details.' : 'Enter your details.'}</h2>
-                  <p id="booking-dialog-description" className="step-intro">{visitorType === 'client' ? 'Your sample client details are prefilled for this signed-in journey.' : 'No account is required. Use sample details only; nothing is submitted or stored.'}</p>
-                  <form id="booking-details-form" className="details-form" onSubmit={(event) => { event.preventDefault(); goNext() }}>
-                    <label><span>Full name</span><input required value={details.name} onChange={(event) => setDetails({ ...details, name: event.target.value })} autoComplete="name" placeholder="Your name" /></label>
-                    <label><span>Email address</span><input required value={details.email} onChange={(event) => setDetails({ ...details, email: event.target.value })} autoComplete="email" type="email" placeholder="you@example.com" /></label>
-                    <label><span>Mobile number</span><input required value={details.phone} onChange={(event) => setDetails({ ...details, phone: event.target.value })} autoComplete="tel" type="tel" placeholder="07700 900000" /></label>
+                  <p id="booking-dialog-description" className="step-intro">{visitorType === 'client' ? 'Your sample client details are prefilled for this signed-in journey.' : 'Obvious sample details are prefilled. Use invented information only; it is not saved beyond this browser session.'}</p>
+                  <form ref={detailsFormRef} id="booking-details-form" className="details-form" autoComplete="off" onSubmit={(event) => { event.preventDefault(); goNext() }}>
+                    <label><span>Full name</span><input required value={details.name} onChange={(event) => setDetails({ ...details, name: event.target.value })} autoComplete="off" placeholder="Alex Example" /></label>
+                    <label><span>Email address</span><input required value={details.email} onChange={(event) => setDetails({ ...details, email: event.target.value })} autoComplete="off" type="email" placeholder="alex@example.com" /></label>
+                    <label><span>Mobile number</span><input required value={details.phone} onChange={(event) => setDetails({ ...details, phone: event.target.value })} autoComplete="off" type="tel" placeholder="07700 900000" /></label>
                     <label className="checkbox-label"><input required checked={details.consent} onChange={(event) => setDetails({ ...details, consent: event.target.checked })} type="checkbox" /><span>I understand this is a non-transactional prototype and no appointment will be created.</span></label>
-                    <label className="checkbox-label optional"><input checked={Boolean(details.marketing)} onChange={(event) => setDetails({ ...details, marketing: event.target.checked })} type="checkbox" /><span>Send me occasional Earth Glory offers in this sample journey. Optional and separate from appointment messages.</span></label>
+                    <label className="checkbox-label optional"><input checked={Boolean(details.marketing)} onChange={(event) => setDetails({ ...details, marketing: event.target.checked })} type="checkbox" /><span>Preview an optional marketing choice. No offers or messages will be sent.</span></label>
                   </form>
                   <div className="secure-note"><LockKeyhole size={17} /><span><strong>Prototype only</strong>These details remain only in this browser session and reset when the page is refreshed or Reset demo is selected.</span></div>
                 </div>
@@ -1216,9 +1217,8 @@ function BookingDialog({
               <div className="step-dots" aria-hidden="true">{[1, 2, 3, 4].map((item) => <span key={item} className={item <= step ? 'active' : ''} />)}</div>
               <button
                 className="button button-dark"
-                type={step === 3 ? 'submit' : 'button'}
-                form={step === 3 ? 'booking-details-form' : undefined}
-                onClick={step === 3 ? undefined : goNext}
+                type="button"
+                onClick={step === 3 ? () => detailsFormRef.current?.requestSubmit() : goNext}
                 disabled={(step === 2 && !resolvedTime) || (step === 4 && !policyAccepted)}
               >
                 {step === 4 ? (mode === 'reschedule' ? 'Finish change preview' : 'Finish preview') : 'Continue'} <ArrowRight size={16} />

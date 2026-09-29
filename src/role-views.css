@@ -146,12 +146,15 @@
 .treatment-provider-note { margin: -6px 0 18px; }
 .workspace-scrim { display: none; }
 
+@media (max-width: 1200px) {
+  .booking-connection-grid { grid-template-columns: 1fr; }
+}
+
 @media (max-width: 1100px) {
   .role-switcher { grid-template-columns: 150px 1fr; gap: 16px; }.role-demo-note { display: none; }
   .workspace-shell { grid-template-columns: 210px minmax(0, 1fr); }.workspace-sidebar { width: 210px; }
   .stats-grid.four { grid-template-columns: 1fr 1fr; }.client-home-grid, .practitioner-grid-layout, .owner-overview-grid, .lower-grid { grid-template-columns: 1fr; }
   .quick-actions-panel { display: grid; grid-template-columns: repeat(3, 1fr); }.quick-actions-panel .panel-title { grid-column: 1 / -1; }.quick-actions-panel > button { min-height: 85px; grid-template-columns: auto 1fr; }.quick-actions-panel > button > svg { display: none; }
-  .booking-connection-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 820px) {

@@ -4,7 +4,7 @@ A polished, responsive front-end concept for Earth Glory with a clearly separate
 
 ## Current Treatwell transition
 
-Earth Glory currently uses Treatwell as its live booking calendar. During this prototype transition, the operating rule is: **Treatwell remains the source of truth for every real booking until a supported direct integration or controlled cutover exists.**
+Earth Glory currently uses Treatwell as its live booking calendar. This prototype adopts the recommended operating rule, pending Avni's final sign-off: **Treatwell remains the source of truth for every real booking until a supported direct integration or controlled cutover exists.**
 
 - Public **Book on Treatwell** actions open Earth Glory's official Treatwell booking flow.
 - Bookings started from this website and bookings made directly on Treatwell continue into the same Treatwell calendar.
@@ -13,6 +13,8 @@ Earth Glory currently uses Treatwell as its live booking calendar. During this p
 - Real phone bookings, walk-ins, breaks, time off and appointment changes must continue to be entered in Treatwell during this transition.
 
 The default configured booking destination is contained in `src/bookingProvider.js`. A deployment can override its tracking query with `VITE_TREATWELL_BOOKING_URL`, but the application accepts only Earth Glory's HTTPS route on Treatwell's booking host. Do not put Treatwell API credentials in this static GitHub Pages application.
+
+Before publishing and at least weekly during the pilot, open that configured route and confirm it still resolves to Earth Glory's venue and reaches bookable availability. If it fails, remove the live-booking action and show a verified phone/email fallback; never direct clients into the prototype booking preview.
 
 ## What is included
 

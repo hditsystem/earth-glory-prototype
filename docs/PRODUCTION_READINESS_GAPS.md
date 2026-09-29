@@ -23,6 +23,8 @@ This document preserves the capabilities required before the platform accepts re
 - Route website clients through Earth Glory's configured official Treatwell-hosted booking page so bookings started on the website and directly on Treatwell use the same live calendar.
 - Keep phone bookings, walk-ins, breaks, time off and live appointment changes in Treatwell during the transition.
 - Treat the configured booking link and direct data synchronization as separate capabilities: the link is present but not monitored, while appointment import and write-back are not connected.
+- Before each deployment and at least weekly during the pilot, confirm the configured URL resolves to Earth Glory's correct venue and reaches bookable availability. Record the check.
+- If the link or listing fails, remove the live-booking action and show a verified phone/email fallback; do not send clients into the prototype preview or confirm bookings outside Treatwell.
 - Confirm in writing whether Earth Glory's Treatwell account and agreement permit an approved booking API integration and custom booking interface.
 - Confirm supported capabilities for availability reads, conflict-checked appointment creation, rescheduling, cancellation, service/staff/location mapping, idempotency, webhooks, rate limits and a sandbox.
 - Do not use scraping, browser automation or unsupported reverse-engineered endpoints for calendar synchronization.

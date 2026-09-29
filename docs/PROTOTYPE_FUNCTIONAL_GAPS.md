@@ -74,7 +74,7 @@ The automated checks cover catalogue validation and Draft/Published visibility p
 | PF-101 | Planned | Client portal entry | Demonstrate a passwordless/manage-link concept with an **Open sample secure link** transition instead of switching directly to Maya. |
 | PF-102 | Planned | Contact verification | Add a simulated code-sent/code-verified state; no message needs to be sent. |
 | PF-103 | Planned | Service-specific intake | Include at least one conditional path for contraindications, preferences, patch testing or preparation. |
-| PF-104 | Implemented | Separate marketing choice | Booking includes an unchecked optional marketing choice distinct from required policy acceptance and appointment messages. |
+| PF-104 | Implemented | Separate marketing choice | Booking previews an unchecked optional marketing choice distinct from required policy acceptance and clearly states that no offer or message will be sent. |
 | PF-105 | Partial | Appointment history | Upcoming, Past and Cancelled tabs follow the shared appointment status. Completion surfaces review/rebook wording, but review submission is not implemented. |
 | PF-106 | Planned | Receipt preview | Open a sample receipt containing provider, appointment, amount, payment status/method and refund history. Current screens show only the payment summary/detail. |
 | PF-107 | Partial | Profile saving | Edited Client contact details update the shared record and persist across role/page navigation in the demo session. Communication preferences and richer validation/dirty states remain. |
