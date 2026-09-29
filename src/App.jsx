@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import {
   ArrowLeft,
   ArrowRight,
@@ -21,6 +21,15 @@ import {
 } from 'lucide-react'
 import heroImage from './assets/earth-glory-hero.png'
 import { RoleSwitcher, RoleWorkspace } from './RoleViews'
+import {
+  blockedEndTimeForAppointment,
+  DEFAULT_OPERATING_HOURS,
+  DEFAULT_PRACTITIONER_HOURS,
+  formatClockTime,
+  getAvailabilityForDate,
+  minutesToClock,
+  parseClockTime,
+} from './availability'
 
 const prototypeRoleIds = ['guest', 'client', 'practitioner', 'owner']
 const lotusLogo = `${import.meta.env.BASE_URL}earth-glory-lotus-logo.png`
@@ -33,6 +42,7 @@ const services = [
     name: 'Back, Neck & Shoulders Massage',
     description: 'A focused 30-minute massage for the back, neck and shoulders.',
     duration: 30,
+    bufferAfter: 10,
     price: 28,
     tone: 'sand',
     icon: Sparkles,
@@ -44,6 +54,7 @@ const services = [
     name: 'Aromatherapy Massage',
     description: 'A full-body massage using aromatic oils, with pressure agreed at the start of the appointment.',
     duration: 60,
+    bufferAfter: 10,
     price: 60,
     tone: 'clay',
     icon: Leaf,
@@ -55,6 +66,7 @@ const services = [
     name: 'Shellac Manicure',
     description: 'A manicure for the hands, finished with Shellac colour.',
     duration: 50,
+    bufferAfter: 10,
     price: 30,
     tone: 'sage',
     icon: Heart,
@@ -66,6 +78,7 @@ const services = [
     name: 'High Frequency Facial',
     description: 'A 60-minute facial that includes high-frequency equipment as part of the treatment.',
     duration: 60,
+    bufferAfter: 15,
     price: 75,
     tone: 'rose',
     icon: Sparkles,
@@ -77,6 +90,7 @@ const services = [
     name: 'Eyebrow Threading',
     description: 'Precise eyebrow shaping for a clean, natural-looking finish.',
     duration: 10,
+    bufferAfter: 5,
     price: 8,
     tone: 'moss',
     icon: Leaf,
@@ -88,6 +102,7 @@ const services = [
     name: 'Eyelash Tint',
     description: 'Tint applied to the natural lashes. A patch test may be required.',
     duration: 15,
+    bufferAfter: 10,
     price: 15,
     tone: 'plum',
     icon: Heart,
@@ -120,7 +135,18 @@ function formatLondonDate(date, options) {
 }
 
 function dateKey(date) {
-  return date.toISOString().slice(0, 10)
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/London',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date)
+  const part = (type) => parts.find((item) => item.type === type)?.value
+  return `${part('year')}-${part('month')}-${part('day')}`
+}
+
+function dateFromKey(value) {
+  return new Date(`${value}T12:00:00Z`)
 }
 
 function upcomingDates() {
@@ -147,9 +173,256 @@ function roleFromLocation() {
   return prototypeRoleIds.includes(requestedRole) ? requestedRole : 'guest'
 }
 
+function serviceSnapshot(service) {
+  return {
+    id: service.id,
+    name: service.name,
+    duration: service.duration,
+    bufferAfter: service.bufferAfter ?? 0,
+    price: service.price,
+  }
+}
+
+function activityEvent(label, actor) {
+  return {
+    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+    label,
+    actor,
+    at: new Intl.DateTimeFormat('en-GB', {
+      hour: 'numeric',
+      minute: '2-digit',
+      timeZone: 'Europe/London',
+    }).format(new Date()),
+  }
+}
+
+function sampleLateStart(date, occupiedMinutes, breathingRoomMinutes = 30) {
+  const day = new Date(`${date}T12:00:00Z`).getUTCDay()
+  const closingTime = DEFAULT_OPERATING_HOURS[day][0].end
+  const calculatedStart = parseClockTime(closingTime) - occupiedMinutes - breathingRoomMinutes
+  const adjustedStart = calculatedStart < 15 * 60 + 30 && calculatedStart + occupiedMinutes > 15 * 60
+    ? 15 * 60 + 30
+    : calculatedStart
+  return minutesToClock(adjustedStart)
+}
+
+function operatingHoursSummary(hours) {
+  const labelForDay = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  const valueForDay = (day) => {
+    const window = hours[day]?.[0]
+    return window ? `${window.start}–${window.end}` : 'Closed'
+  }
+  const weekdayValues = [1, 2, 3, 4, 5].map(valueForDay)
+  const weekdaysMatch = weekdayValues.every((value) => value === weekdayValues[0])
+
+  if (weekdaysMatch) {
+    return `Mon–Fri ${weekdayValues[0]} · Sat ${valueForDay(6)} · Sun ${valueForDay(0)}`
+  }
+  return [1, 2, 3, 4, 5, 6, 0].map((day) => `${labelForDay[day]} ${valueForDay(day)}`).join(' · ')
+}
+
+function createInitialDemoState() {
+  const dates = upcomingDates()
+  const primaryDate = dateKey(dates[0])
+  const secondDate = dateKey(dates[1])
+  const aromatherapy = services.find((service) => service.id === 'aromatherapy-massage')
+  const threading = services.find((service) => service.id === 'eyebrow-threading')
+  const shellac = services.find((service) => service.id === 'shellac-manicure')
+  const facial = services.find((service) => service.id === 'high-frequency-facial')
+  const lateFacialStart = sampleLateStart(primaryDate, facial.duration + facial.bufferAfter)
+  const lateShellacStart = sampleLateStart(secondDate, shellac.duration + shellac.bufferAfter)
+
+  const appointment = {
+    id: 'demo-appointment',
+    reference: 'EG-1048',
+    client: { name: 'Maya Thompson', email: 'maya@example.com', phone: '07700 900123' },
+    service: serviceSnapshot(aromatherapy),
+    practitioner: { id: 'avni', name: 'Avni' },
+    dateKey: primaryDate,
+    startTime: '11:30',
+    status: 'confirmed',
+    paidAmount: 0,
+    paymentMethod: null,
+    serviceNote: 'Client prefers light-to-medium pressure. Confirm on arrival.',
+    source: 'Online booking',
+    events: [activityEvent('Sample appointment confirmed', 'Client')],
+  }
+
+  const otherAppointments = [
+    {
+      id: 'sample-1047',
+      reference: 'EG-1047',
+      client: { name: 'Sophie Lewis' },
+      service: serviceSnapshot(threading),
+      practitioner: { id: 'avni', name: 'Avni' },
+      dateKey: primaryDate,
+      startTime: '10:00',
+      status: 'completed',
+      paidAmount: threading.price,
+      paymentMethod: 'Card terminal',
+      serviceNote: '',
+      source: 'Owner booking',
+      events: [],
+    },
+    {
+      id: 'sample-1049',
+      reference: 'EG-1049',
+      client: { name: 'Noah Patel' },
+      service: serviceSnapshot(shellac),
+      practitioner: { id: 'avni', name: 'Avni' },
+      dateKey: primaryDate,
+      startTime: '13:45',
+      status: 'confirmed',
+      paidAmount: 0,
+      paymentMethod: null,
+      serviceNote: '',
+      source: 'Phone booking',
+      events: [],
+    },
+    {
+      id: 'sample-1050',
+      reference: 'EG-1050',
+      client: { name: 'Amelia Jones' },
+      service: serviceSnapshot(facial),
+      practitioner: { id: 'avni', name: 'Avni' },
+      dateKey: primaryDate,
+      startTime: lateFacialStart,
+      status: 'confirmed',
+      paidAmount: 25,
+      paymentMethod: 'Online deposit',
+      serviceNote: '',
+      source: 'Online booking',
+      events: [],
+    },
+    {
+      id: 'sample-1051',
+      reference: 'EG-1051',
+      client: { name: 'Priya Shah' },
+      service: serviceSnapshot(shellac),
+      practitioner: { id: 'avni', name: 'Avni' },
+      dateKey: secondDate,
+      startTime: lateShellacStart,
+      status: 'confirmed',
+      paidAmount: 0,
+      paymentMethod: null,
+      serviceNote: '',
+      source: 'Online booking',
+      events: [],
+    },
+  ]
+
+  return {
+    revision: Date.now(),
+    appointment,
+    otherAppointments,
+    blocks: [
+      { id: 'sample-break', dateKey: primaryDate, start: '15:00', end: '15:30', type: 'break', label: 'Afternoon break' },
+    ],
+    operatingHours: structuredClone(DEFAULT_OPERATING_HOURS),
+    practitionerHours: structuredClone(DEFAULT_PRACTITIONER_HOURS),
+    bookingRules: { slotIntervalMinutes: 30 },
+  }
+}
+
+function updateAppointment(state, updater) {
+  return { ...state, appointment: updater(state.appointment) }
+}
+
+function demoReducer(state, action) {
+  switch (action.type) {
+    case 'SET_APPOINTMENT':
+      return { ...state, appointment: action.appointment }
+    case 'CREATE_APPOINTMENT':
+      return {
+        ...state,
+        appointment: action.appointment,
+        otherAppointments: [...state.otherAppointments, state.appointment],
+      }
+    case 'SET_STATUS':
+      return updateAppointment(state, (appointment) => ({
+        ...appointment,
+        status: action.status,
+        events: [...appointment.events, activityEvent(action.label, action.actor)],
+      }))
+    case 'CANCEL_APPOINTMENT':
+      return updateAppointment(state, (appointment) => ({
+        ...appointment,
+        status: 'cancelled_client',
+        cancellation: { reason: 'Plans changed', refundAmount: appointment.paidAmount },
+        paidAmount: 0,
+        events: [...appointment.events, activityEvent('Appointment cancelled in the prototype', 'Client')],
+      }))
+    case 'SAVE_NOTE':
+      return updateAppointment(state, (appointment) => ({
+        ...appointment,
+        serviceNote: action.note,
+        events: [...appointment.events, activityEvent('Service note updated', 'Practitioner')],
+      }))
+    case 'UPDATE_CLIENT':
+      return {
+        ...state,
+        appointment: {
+          ...state.appointment,
+          client: action.client,
+          events: [...state.appointment.events, activityEvent('Client contact details updated', 'Client')],
+        },
+        otherAppointments: state.otherAppointments.map((item) => (
+          item.client.email && item.client.email === state.appointment.client.email
+            ? { ...item, client: action.client }
+            : item
+        )),
+      }
+    case 'RECORD_PAYMENT':
+      return updateAppointment(state, (appointment) => {
+        const paidAmount = Math.min(appointment.service.price, appointment.paidAmount + action.amount)
+        return {
+          ...appointment,
+          paidAmount,
+          paymentMethod: action.method,
+          events: [...appointment.events, activityEvent(`${formatMoney(action.amount)} sample payment recorded`, 'Owner')],
+        }
+      })
+    case 'ADD_BLOCK':
+      return {
+        ...state,
+        blocks: [...state.blocks, { ...action.block, id: `block-${Date.now()}`, type: 'blocked' }],
+      }
+    case 'UPDATE_HOURS':
+      return {
+        ...state,
+        operatingHours: {
+          ...state.operatingHours,
+          [action.day]: action.closed ? [] : [{ start: action.start, end: action.end }],
+        },
+      }
+    case 'RESET':
+      return createInitialDemoState()
+    default:
+      return state
+  }
+}
+
+function appointmentToBusyEvent(appointment) {
+  return {
+    id: appointment.id,
+    dateKey: appointment.dateKey,
+    start: appointment.startTime,
+    end: blockedEndTimeForAppointment({
+      startTime: appointment.startTime,
+      duration: appointment.service.duration,
+      bufferAfter: appointment.service.bufferAfter,
+    }),
+    type: 'appointment',
+    status: appointment.status,
+    label: `${appointment.service.name} · ${appointment.client.name}`,
+  }
+}
+
 function App() {
+  const [demoState, dispatch] = useReducer(demoReducer, null, createInitialDemoState)
   const [bookingOpen, setBookingOpen] = useState(false)
   const [selectedService, setSelectedService] = useState(services[0])
+  const [bookingIntent, setBookingIntent] = useState({ mode: 'new', appointmentId: null })
   const [category, setCategory] = useState('All treatments')
   const [menuOpen, setMenuOpen] = useState(false)
   const [openFaq, setOpenFaq] = useState(0)
@@ -160,6 +433,11 @@ function App() {
   const filteredServices = category === 'All treatments'
     ? services
     : services.filter((service) => service.category === category)
+  const busyEvents = useMemo(() => [
+    appointmentToBusyEvent(demoState.appointment),
+    ...demoState.otherAppointments.map(appointmentToBusyEvent),
+    ...demoState.blocks,
+  ], [demoState.appointment, demoState.blocks, demoState.otherAppointments])
 
   useEffect(() => {
     const url = new URL(window.location.href)
@@ -197,9 +475,49 @@ function App() {
     return () => window.removeEventListener('keydown', closeMenu)
   }, [menuOpen])
 
-  function startBooking(service = services[0]) {
-    setSelectedService(service)
+  function startBooking(service = services[0], options = {}) {
+    const resolvedService = services.find((item) => item.id === service?.id) ?? services[0]
+    setSelectedService(resolvedService)
+    setBookingIntent({ mode: options.mode ?? 'new', appointmentId: options.appointmentId ?? null })
     setBookingOpen(true)
+  }
+
+  function completeBooking({ service, date, time, details, mode }) {
+    const previous = demoState.appointment
+    const isReschedule = mode === 'reschedule'
+    const referenceNumber = 1048 + demoState.otherAppointments.length
+    const bookingActor = activeRole === 'owner' ? 'Owner' : activeRole === 'practitioner' ? 'Practitioner' : activeRole === 'client' ? 'Client' : 'Guest'
+    const appointment = {
+      ...previous,
+      id: isReschedule ? previous.id : `demo-appointment-${referenceNumber}`,
+      reference: isReschedule ? previous.reference : `EG-DEMO-${referenceNumber}`,
+      client: isReschedule ? previous.client : {
+        name: details.name.trim(),
+        email: details.email.trim(),
+        phone: details.phone.trim(),
+      },
+      service: serviceSnapshot(service),
+      practitioner: { id: 'avni', name: 'Avni' },
+      dateKey: dateKey(date),
+      startTime: time,
+      status: 'confirmed',
+      paidAmount: isReschedule ? previous.paidAmount : 0,
+      paymentMethod: isReschedule ? previous.paymentMethod : null,
+      cancellation: null,
+      serviceNote: isReschedule ? previous.serviceNote : '',
+      source: isReschedule ? previous.source : `${bookingActor} prototype booking`,
+      events: [
+        ...(isReschedule ? previous.events : []),
+        activityEvent(isReschedule ? 'Appointment rescheduled in the prototype' : 'Prototype booking confirmed', isReschedule ? 'Client' : bookingActor),
+      ],
+    }
+    dispatch({ type: isReschedule ? 'SET_APPOINTMENT' : 'CREATE_APPOINTMENT', appointment })
+    return appointment
+  }
+
+  function manageCompletedBooking() {
+    setBookingOpen(false)
+    switchRole('client')
   }
 
   function switchRole(role) {
@@ -223,7 +541,7 @@ function App() {
         <p>Four connected user views · No live bookings or payments</p>
       </div>
 
-      <RoleSwitcher activeRole={activeRole} onChange={switchRole} />
+      <RoleSwitcher activeRole={activeRole} onChange={switchRole} onReset={() => dispatch({ type: 'RESET' })} />
 
       {activeRole === 'guest' ? (
         <>
@@ -343,7 +661,7 @@ function App() {
                   <div className="service-card-bottom">
                     <div>
                       <strong>{formatMoney(service.price)}</strong>
-                      <span><Clock3 size={14} /> {service.duration} min</span>
+                      <span><Clock3 size={14} /> {service.duration} min + {service.bufferAfter} min reset</span>
                     </div>
                     <button type="button" onClick={() => startBooking(service)} aria-label={`Select ${service.name}`}>
                       Select <ArrowRight size={16} />
@@ -424,7 +742,7 @@ function App() {
               <p>Venue details are shown for prototype feedback and will be confirmed before live booking opens.</p>
               <div className="visit-facts">
                 <div><MapPin size={18} /><span><strong>141 North End Road</strong><small>West Kensington, London W14 9NH</small></span></div>
-                <div><Clock3 size={18} /><span><strong>Open seven days</strong><small>Mon–Fri 10:00–19:30 · Sat 10:00–18:00 · Sun 10:00–17:00</small></span></div>
+                <div><Clock3 size={18} /><span><strong>Sample opening hours</strong><small>{operatingHoursSummary(demoState.operatingHours)}</small></span></div>
                 <div><MessageCircle size={18} /><span><strong>Questions before booking?</strong><small>Call 07745 241200 or email Earth Glory</small></span></div>
               </div>
               <button className="button button-cream button-large" type="button" onClick={() => startBooking()}>
@@ -488,13 +806,41 @@ function App() {
 
         </>
       ) : (
-        <RoleWorkspace key={activeRole} role={activeRole} onStartBooking={() => startBooking()} />
+        <RoleWorkspace
+          key={`${activeRole}-${demoState.revision}`}
+          role={activeRole}
+          appointment={demoState.appointment}
+          otherAppointments={demoState.otherAppointments}
+          blocks={demoState.blocks}
+          services={services}
+          operatingHours={demoState.operatingHours}
+          practitionerHours={demoState.practitionerHours}
+          bookingRules={demoState.bookingRules}
+          onStartBooking={(service, options) => startBooking(service, options)}
+          onReschedule={() => startBooking(demoState.appointment.service, { mode: 'reschedule', appointmentId: demoState.appointment.id })}
+          onCancel={() => dispatch({ type: 'CANCEL_APPOINTMENT' })}
+          onStatusChange={(status, label) => dispatch({ type: 'SET_STATUS', status, label, actor: 'Practitioner' })}
+          onSaveNote={(note) => dispatch({ type: 'SAVE_NOTE', note })}
+          onAddBlock={(block) => dispatch({ type: 'ADD_BLOCK', block })}
+          onRecordPayment={(amount, method) => dispatch({ type: 'RECORD_PAYMENT', amount, method })}
+          onUpdateHours={(payload) => dispatch({ type: 'UPDATE_HOURS', ...payload })}
+          onUpdateClient={(client) => dispatch({ type: 'UPDATE_CLIENT', client })}
+        />
       )}
 
       {bookingOpen && (
         <BookingDialog
           initialService={selectedService}
           visitorType={activeRole === 'client' ? 'client' : 'guest'}
+          mode={bookingIntent.mode}
+          existingAppointment={bookingIntent.appointmentId ? demoState.appointment : null}
+          clientDetails={demoState.appointment.client}
+          busyEvents={busyEvents}
+          operatingHours={demoState.operatingHours}
+          practitionerHours={demoState.practitionerHours}
+          bookingRules={demoState.bookingRules}
+          onComplete={completeBooking}
+          onManage={manageCompletedBooking}
           onClose={() => setBookingOpen(false)}
         />
       )}
@@ -502,24 +848,51 @@ function App() {
   )
 }
 
-function BookingDialog({ initialService, visitorType = 'guest', onClose }) {
-  const [step, setStep] = useState(1)
+function BookingDialog({
+  initialService,
+  visitorType = 'guest',
+  mode = 'new',
+  existingAppointment,
+  clientDetails,
+  busyEvents,
+  operatingHours,
+  practitionerHours,
+  bookingRules,
+  onComplete,
+  onManage,
+  onClose,
+}) {
+  const [step, setStep] = useState(mode === 'reschedule' ? 2 : 1)
   const [service, setService] = useState(initialService)
   const practitioner = practitioners[0]
   const dates = useMemo(() => upcomingDates(), [])
-  const [date, setDate] = useState(dates[0])
-  const [time, setTime] = useState('11:30 AM')
-  const [details, setDetails] = useState(visitorType === 'client'
-    ? { name: 'Maya Thompson', email: 'maya@example.com', phone: '07700 900123', consent: false }
+  const [date, setDate] = useState(() => existingAppointment ? dateFromKey(existingAppointment.dateKey) : dates[0])
+  const [time, setTime] = useState(existingAppointment?.startTime ?? '')
+  const [details, setDetails] = useState(existingAppointment
+    ? { ...existingAppointment.client, consent: false, marketing: false }
+    : visitorType === 'client'
+      ? { ...clientDetails, consent: false, marketing: false }
     : { name: '', email: '', phone: '', consent: false })
   const [submitted, setSubmitted] = useState(false)
+  const [policyAccepted, setPolicyAccepted] = useState(false)
+  const [completedAppointment, setCompletedAppointment] = useState(null)
   const dialogRef = useRef(null)
   const closeButtonRef = useRef(null)
   const returnFocusRef = useRef(null)
   const successTitleRef = useRef(null)
   const stepTitleRef = useRef(null)
   const previousStepRef = useRef(step)
-  const times = ['9:00 AM', '10:15 AM', '11:30 AM', '1:45 PM', '3:00 PM', '5:15 PM']
+  const availability = useMemo(() => getAvailabilityForDate({
+    dateKey: dateKey(date),
+    service,
+    operatingHours,
+    practitionerHours,
+    busyEvents,
+    slotIntervalMinutes: bookingRules.slotIntervalMinutes,
+    excludeEventId: mode === 'reschedule' ? existingAppointment?.id : null,
+  }), [bookingRules.slotIntervalMinutes, busyEvents, date, existingAppointment?.id, mode, operatingHours, practitionerHours, service])
+  const resolvedTime = availability.slots.some((slot) => slot.start === time && slot.available) ? time : ''
+  const selectedSlot = availability.slots.find((slot) => slot.start === resolvedTime)
 
   useEffect(() => {
     returnFocusRef.current = document.activeElement
@@ -572,7 +945,11 @@ function BookingDialog({ initialService, visitorType = 'guest', onClose }) {
 
   function goNext() {
     if (step < 4) setStep((current) => current + 1)
-    else setSubmitted(true)
+    else {
+      const completed = onComplete({ service, date, time: resolvedTime, details, mode })
+      setCompletedAppointment(completed)
+      setSubmitted(true)
+    }
   }
 
   return (
@@ -590,26 +967,30 @@ function BookingDialog({ initialService, visitorType = 'guest', onClose }) {
         {submitted ? (
           <div className="booking-success">
             <div className="success-icon"><Check size={28} /></div>
-            <div className="eyebrow dark"><span /> Prototype complete</div>
-            <h2 ref={successTitleRef} id="booking-dialog-title" tabIndex="-1">That’s the full booking journey.</h2>
-            <p id="booking-dialog-description">No appointment or payment has been created. A live service would first recheck availability, apply Earth Glory’s approved payment and policy rules, and then create a traceable booking record.</p>
+            <div className="eyebrow dark"><span /> Connected prototype</div>
+            <h2 ref={successTitleRef} id="booking-dialog-title" tabIndex="-1">{mode === 'reschedule' ? 'Your demo visit has moved.' : 'Your demo booking is ready.'}</h2>
+            <p id="booking-dialog-description">This session-only appointment now appears in the Client, Practitioner and Owner views. Nothing was charged or sent, and refreshing the page restores the original sample.</p>
             <div className="success-card">
-              <div><small>Treatment</small><strong>{service.name}</strong></div>
-              <div><small>Date & time</small><strong>{formatLondonDate(date, { weekday: 'long', month: 'long', day: 'numeric' })} · {time}</strong></div>
+              <div><small>Reference</small><strong>{completedAppointment?.reference}</strong></div>
+              <div><small>Treatment</small><strong>{completedAppointment?.service.name}</strong></div>
+              <div><small>Date & time</small><strong>{completedAppointment && formatLondonDate(dateFromKey(completedAppointment.dateKey), { weekday: 'long', month: 'long', day: 'numeric' })} · {completedAppointment && formatClockTime(completedAppointment.startTime)}</strong></div>
               <div><small>Therapist</small><strong>{practitioner.name}</strong></div>
-              <div><small>Due today</small><strong>No payment in prototype</strong></div>
+              <div><small>Payment</small><strong>{completedAppointment && formatMoney(completedAppointment.service.price)} due at venue · simulated</strong></div>
             </div>
             <div className="success-records" aria-label="Records a live booking may create">
-              <strong>Records created only when relevant</strong>
+              <strong>What changed in this browser session</strong>
               <div>
-                <span><CheckCircle2 size={15} /> Always: appointment and confirmation</span>
-                <span><CheckCircle2 size={15} /> After payment: provider receipt</span>
-                <span><CheckCircle2 size={15} /> After a refund: refund record</span>
-                <span><CheckCircle2 size={15} /> Processor-paid orders: earnings and payout status</span>
+                <span><CheckCircle2 size={15} /> Client can manage this appointment</span>
+                <span><CheckCircle2 size={15} /> Practitioner sees the same time</span>
+                <span><CheckCircle2 size={15} /> Owner sees the same status and balance</span>
+                <span><CheckCircle2 size={15} /> Availability now treats the time as occupied</span>
               </div>
             </div>
-            <button className="button button-dark button-large full-width" type="button" onClick={onClose}>Return to the website</button>
-            <small className="demo-note">Sample journey only — details were not submitted.</small>
+            <div className="success-actions full-width">
+              <button className="button button-dark button-large" type="button" onClick={onManage}>Manage this demo booking</button>
+              <button className="button button-light button-large" type="button" onClick={onClose}>Return to website</button>
+            </div>
+            <small className="demo-note">Session-only demo — no appointment, payment, email or SMS was created.</small>
           </div>
         ) : (
           <>
@@ -630,10 +1011,10 @@ function BookingDialog({ initialService, visitorType = 'guest', onClose }) {
                         className={service.id === item.id ? 'choice active' : 'choice'}
                         type="button"
                         aria-pressed={service.id === item.id}
-                        onClick={() => setService(item)}
+                        onClick={() => { setService(item); setTime('') }}
                       >
                         <span className="choice-radio">{service.id === item.id && <span />}</span>
-                        <span className="choice-copy"><strong>{item.name}</strong><small>{item.description}</small><em><Clock3 size={13} /> {item.duration} min</em></span>
+                        <span className="choice-copy"><strong>{item.name}</strong><small>{item.description}</small><em><Clock3 size={13} /> {item.duration} min treatment · {item.bufferAfter} min reset</em></span>
                         <span className="choice-price">{formatMoney(item.price)}</span>
                       </button>
                     ))}
@@ -644,8 +1025,8 @@ function BookingDialog({ initialService, visitorType = 'guest', onClose }) {
               {step === 2 && (
                 <div className="booking-step">
                   <div className="eyebrow dark"><span /> Step two</div>
-                  <h2 ref={stepTitleRef} id="booking-dialog-title" tabIndex="-1">Choose a date and time.</h2>
-                  <p id="booking-dialog-description" className="step-intro">Sample times are shown in London time. They are not connected to Avni’s calendar.</p>
+                  <h2 ref={stepTitleRef} id="booking-dialog-title" tabIndex="-1">{mode === 'reschedule' ? 'Choose a new time.' : 'Choose a date and time.'}</h2>
+                  <p id="booking-dialog-description" className="step-intro">Times are calculated from Earth Glory’s opening hours, Avni’s working hours, treatment length, reset time, appointments, breaks and blocked time.</p>
                   <div className="date-strip">
                     {dates.map((item) => (
                       <button
@@ -653,7 +1034,7 @@ function BookingDialog({ initialService, visitorType = 'guest', onClose }) {
                         className={dateKey(date) === dateKey(item) ? 'active' : ''}
                         type="button"
                         aria-pressed={dateKey(date) === dateKey(item)}
-                        onClick={() => setDate(item)}
+                        onClick={() => { setDate(item); setTime('') }}
                       >
                         <small>{formatLondonDate(item, { weekday: 'short' })}</small>
                         <strong>{formatLondonDate(item, { day: 'numeric' })}</strong>
@@ -661,22 +1042,23 @@ function BookingDialog({ initialService, visitorType = 'guest', onClose }) {
                       </button>
                     ))}
                   </div>
-                  <div className="time-label"><span>Sample times</span><small><span className="pulse-dot" /> Prototype data</small></div>
+                  <div className="time-label"><span>Calculated sample times</span><small><span className="pulse-dot" /> {availability.slots.filter((slot) => slot.available).length} available</small></div>
                   <div className="time-grid">
-                    {times.map((item, index) => (
+                    {availability.slots.map((slot) => (
                       <button
-                        key={item}
-                        disabled={index === 0}
-                        className={time === item ? 'active' : ''}
+                        key={slot.start}
+                        disabled={!slot.available}
+                        className={resolvedTime === slot.start ? 'active' : ''}
                         type="button"
-                        aria-pressed={time === item}
-                        onClick={() => setTime(item)}
+                        aria-pressed={resolvedTime === slot.start}
+                        onClick={() => setTime(slot.start)}
                       >
-                        {item}{index === 0 && <small>Example unavailable</small>}
+                        {formatClockTime(slot.start)}{!slot.available && <small>{slot.reason}</small>}
                       </button>
                     ))}
                   </div>
-                  <div className="booking-help"><Clock3 size={18} /><p>In the live service, the server would recheck availability and temporarily reserve the selected time during checkout.</p></div>
+                  {availability.slots.length === 0 && <div className="booking-help"><Clock3 size={18} /><p><strong>No online times on this day.</strong>Earth Glory may be closed or Avni may be unavailable. Select another date to continue.</p></div>}
+                  {selectedSlot?.available && <div className="booking-help"><Clock3 size={18} /><p><strong>{formatClockTime(selectedSlot.start)}–{formatClockTime(selectedSlot.end)} treatment.</strong>The calendar remains protected until {formatClockTime(selectedSlot.blockedEnd)} including {service.bufferAfter} minutes to reset the room.</p></div>}
                 </div>
               )}
 
@@ -690,8 +1072,9 @@ function BookingDialog({ initialService, visitorType = 'guest', onClose }) {
                     <label><span>Email address</span><input required value={details.email} onChange={(event) => setDetails({ ...details, email: event.target.value })} autoComplete="email" type="email" placeholder="you@example.com" /></label>
                     <label><span>Mobile number</span><input required value={details.phone} onChange={(event) => setDetails({ ...details, phone: event.target.value })} autoComplete="tel" type="tel" placeholder="07700 900000" /></label>
                     <label className="checkbox-label"><input required checked={details.consent} onChange={(event) => setDetails({ ...details, consent: event.target.checked })} type="checkbox" /><span>I understand this is a non-transactional prototype and no appointment will be created.</span></label>
+                    <label className="checkbox-label optional"><input checked={Boolean(details.marketing)} onChange={(event) => setDetails({ ...details, marketing: event.target.checked })} type="checkbox" /><span>Send me occasional Earth Glory offers in this sample journey. Optional and separate from appointment messages.</span></label>
                   </form>
-                  <div className="secure-note"><LockKeyhole size={17} /><span><strong>Prototype only</strong>These details remain only in the open booking flow and are discarded when it closes.</span></div>
+                  <div className="secure-note"><LockKeyhole size={17} /><span><strong>Prototype only</strong>These details remain only in this browser session and reset when the page is refreshed or Reset demo is selected.</span></div>
                 </div>
               )}
 
@@ -704,14 +1087,19 @@ function BookingDialog({ initialService, visitorType = 'guest', onClose }) {
                     <dl>
                       <div><dt>Service provider</dt><dd>Earth Glory · {practitioner.name}</dd></div>
                       <div><dt>Treatment</dt><dd>{service.name} · {service.duration} minutes</dd></div>
-                      <div><dt>Date & time</dt><dd>{formatLondonDate(date, { weekday: 'long', month: 'long', day: 'numeric' })} · {time}</dd></div>
+                      <div><dt>Calendar time</dt><dd>{service.duration + service.bufferAfter} minutes including room reset</dd></div>
+                      <div><dt>Date & time</dt><dd>{formatLondonDate(date, { weekday: 'long', month: 'long', day: 'numeric' })} · {formatClockTime(resolvedTime)}</dd></div>
                       <div><dt>Venue</dt><dd>141 North End Road · West Kensington, London</dd></div>
                       <div><dt>Treatment price</dt><dd>{formatMoney(service.price)}</dd></div>
-                      <div><dt>Payment today</dt><dd>None in this prototype</dd></div>
+                      <div><dt>Payment mode</dt><dd>Pay at venue · simulated</dd></div>
+                      <div><dt>Due now</dt><dd>£0 in prototype</dd></div>
                     </dl>
                     <div className="review-policy">
                       <ShieldCheck size={19} />
-                      <p><strong>Policies still require owner approval.</strong>The live confirmation action must show accepted cancellation, refund and payment terms before creating an appointment.</p>
+                      <div>
+                        <p><strong>Sample policy for workflow feedback.</strong>Changes are demonstrated only. Earth Glory’s final cancellation, refund and no-show wording still requires owner approval.</p>
+                        <label className="policy-check"><input type="checkbox" checked={policyAccepted} onChange={(event) => setPolicyAccepted(event.target.checked)} /><span>I accept the sample booking and cancellation terms for this prototype.</span></label>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -727,14 +1115,14 @@ function BookingDialog({ initialService, visitorType = 'guest', onClose }) {
                 ><span className="summary-brand-logo"><img src={lotusLogo} alt="" width="256" height="256" aria-hidden="true" /></span></div>
                 <h3>{service.name}</h3>
                 <ul>
-                  <li><Clock3 size={16} /><span><small>Duration</small><strong>{service.duration} minutes</strong></span></li>
+                  <li><Clock3 size={16} /><span><small>Appointment time</small><strong>{service.duration} min + {service.bufferAfter} min reset</strong></span></li>
                   <li><UserRound size={16} /><span><small>Therapist</small><strong>{practitioner.name}</strong></span></li>
-                  {step >= 2 && <li><CalendarDays size={16} /><span><small>Date & time</small><strong>{formatLondonDate(date, { month: 'short', day: 'numeric' })} · {time}</strong></span></li>}
+                  {step >= 2 && resolvedTime && <li><CalendarDays size={16} /><span><small>Date & time</small><strong>{formatLondonDate(date, { month: 'short', day: 'numeric' })} · {formatClockTime(resolvedTime)}</strong></span></li>}
                 </ul>
               </div>
               <div className="summary-total">
                 <div><span>Treatment</span><strong>{formatMoney(service.price)}</strong></div>
-                <div><span>Payment terms</span><strong>To confirm</strong></div>
+                <div><span>Payment terms</span><strong>Pay at venue · sample</strong></div>
                 <div><span>Due now</span><strong>£0 in prototype</strong></div>
               </div>
             </aside>
@@ -749,8 +1137,9 @@ function BookingDialog({ initialService, visitorType = 'guest', onClose }) {
                 type={step === 3 ? 'submit' : 'button'}
                 form={step === 3 ? 'booking-details-form' : undefined}
                 onClick={step === 3 ? undefined : goNext}
+                disabled={(step === 2 && !resolvedTime) || (step === 4 && !policyAccepted)}
               >
-                {step === 4 ? 'Complete prototype' : 'Continue'} <ArrowRight size={16} />
+                {step === 4 ? (mode === 'reschedule' ? 'Save demo change' : 'Confirm demo booking') : 'Continue'} <ArrowRight size={16} />
               </button>
             </div>
           </>

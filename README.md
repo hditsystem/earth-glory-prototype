@@ -8,27 +8,36 @@ A polished, responsive, non-transactional front-end concept for Earth Glory.
 - Category filtering for treatment discovery
 - Four-step guest booking flow:
   1. treatment
-  2. sample London date and time
+  2. calculated London date and time
   3. sample contact details and prototype acknowledgement
   4. complete booking, policy and payment review
+- Calculated sample availability that intersects Earth Glory operating hours with practitioner hours, then protects each service's treatment duration and room-reset buffer against appointments, breaks, owner-blocked time and closing time
+- Late-booking overlap prevention: a start time is disabled when the treatment or reset period would run into a later appointment, even when the proposed start itself appears free
 - Clear treatment price and deliberately unconfirmed payment terms
-- Explicit non-transactional confirmation state showing the records a live system would create
+- Explicit non-transactional confirmation state showing the session record a live system would create
 - Responsive desktop/mobile layouts and persistent mobile booking action
 - Keyboard-friendly controls, trapped and restored modal focus, reduced-motion support and semantic landmarks
 - Original generated hero artwork bundled through `src/assets`
 - Owner-supplied lotus identity refined into a transparent, web-optimised PNG and used consistently across public, booking and workspace surfaces
-- Four connected feedback views using one shared sample appointment:
+- Four connected feedback views using one active session-only appointment, supporting schedule records and shared activity state:
   1. Guest discovery and no-account booking
-  2. Client appointment self-service, receipts and preferences
-  3. Practitioner schedule, client brief and appointment-status workflow
-  4. Owner calendar, services, clients, payments, reports and settings
+  2. Client appointment detail, rescheduling, cancellation, payment summary and preferences
+  3. Practitioner schedule, client brief, appointment-status workflow and service note
+  4. Owner calendar, appointment detail, blocked time, sample payment recording, reports and editable operating hours
+- Cross-role updates for the shared appointment, including booking/rescheduling, cancellation, practitioner status, service note, owner-recorded payment and activity history
+- A **Reset demo** action that restores the original sample scenario
 - Shareable role previews through `?role=client`, `?role=practitioner` and `?role=owner`; the clean URL opens the Guest view
 
-Selected services, durations, prices and profile details remain draft content until Avni approves them. The booking times are sample data; no appointment, payment, email or SMS is created or sent, and entered contact details remain only in the open booking flow.
+Selected services, durations, reset buffers, prices, operating hours and profile details remain draft content until Avni approves them. Available starts are calculated from sample data in the browser; no real appointment, payment, email or SMS is created or sent. Connected demo records remain only for the current page session and reset on refresh or when **Reset demo** is selected.
 
 The future marketplace concept source is retained in `src/MarketplacePreview.jsx` but is intentionally not linked or included in the public build during the Earth Glory feedback round.
 
 Guest is a no-account state in the client journey, not a stored authorization role. In a live system, Client, Practitioner and Owner access must be authenticated and enforced on the server; the visible role switcher is only for prototype feedback.
+
+## Product gap registers
+
+- [`docs/PROTOTYPE_FUNCTIONAL_GAPS.md`](docs/PROTOTYPE_FUNCTIONAL_GAPS.md) tracks missing prototype interactions, cross-role continuity and the recommended front-end implementation order.
+- [`docs/PRODUCTION_READINESS_GAPS.md`](docs/PRODUCTION_READINESS_GAPS.md) preserves the separate operational, technical and compliance work required before real bookings or payments.
 
 ## Run locally
 
@@ -48,6 +57,7 @@ Expected address: `https://hditsystem.github.io/earth-glory-prototype/`
 ## Quality checks
 
 ```bash
+npm test
 npm run lint
 npm run build
 ```

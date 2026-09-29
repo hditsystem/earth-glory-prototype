@@ -233,7 +233,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .date-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
 .date-strip button { min-height: 92px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; border: 1px solid rgba(49,36,29,.13); background: white; border-radius: 7px; cursor: pointer; }.date-strip button.active { color: white; background: #513b30; border-color: #513b30; }.date-strip small, .date-strip span { font-size: 9px; opacity: .75; }.date-strip strong { font-family: Georgia, serif; font-size: 22px; font-weight: 400; }
 .time-label { margin: 28px 0 11px; display: flex; justify-content: space-between; font-size: 11px; }.time-label > small { display: flex; align-items: center; gap: 8px; color: #7b8b6e; }.time-label .pulse-dot { width: 6px; height: 6px; }
-.time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }.time-grid button { min-height: 52px; border: 1px solid rgba(49,36,29,.13); background: white; border-radius: 6px; font-size: 11px; cursor: pointer; }.time-grid button.active { color: white; background: #513b30; border-color: #513b30; }.time-grid button:disabled { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2px; color: #aaa09a; background: #f4f1ec; text-decoration: line-through; cursor: not-allowed; }.time-grid button:disabled small { text-decoration: none; font-size: 7px; text-transform: uppercase; }
+.time-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }.time-grid button { min-height: 52px; border: 1px solid rgba(49,36,29,.13); background: white; border-radius: 6px; font-size: 11px; cursor: pointer; }.time-grid button.active { color: white; background: #513b30; border-color: #513b30; }.time-grid button:disabled { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 2px; color: #aaa09a; background: #f4f1ec; cursor: not-allowed; }.time-grid button:disabled small { font-size: 8px; text-transform: uppercase; }
 .details-form { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 12px; }.details-form label { display: flex; flex-direction: column; gap: 7px; color: #594b43; font-size: 9px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; }.details-form label:first-child { grid-column: 1 / -1; }.details-form input:not([type='checkbox']) { width: 100%; height: 47px; padding: 0 13px; border: 1px solid rgba(52,38,30,.17); border-radius: 5px; outline: none; background: white; font-size: 12px; text-transform: none; letter-spacing: normal; }.details-form input:focus { border-color: #8c6754; box-shadow: 0 0 0 3px rgba(140,103,84,.11); }.checkbox-label { grid-column: 1 / -1; margin-top: 7px; padding: 13px; display: grid !important; grid-template-columns: auto 1fr; align-items: start; gap: 10px !important; background: #f7f2ec; font-weight: 400 !important; letter-spacing: normal !important; line-height: 1.5; text-transform: none !important; }.checkbox-label input { accent-color: #6b4b3b; }
 .secure-note { margin-top: 17px; padding-top: 15px; display: flex; gap: 10px; align-items: center; border-top: 1px solid var(--line); color: #8b7b71; }.secure-note > span { display: flex; flex-direction: column; gap: 3px; font-size: 9px; }.secure-note strong { color: #55473f; font-size: 10px; }
 .booking-review { border: 1px solid rgba(49,36,29,.13); background: white; }
@@ -321,4 +321,16 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
+
+/* Connected prototype additions */
+.time-grid button:disabled small { max-width: 112px; line-height: 1.25; text-align: center; }
+.checkbox-label.optional { margin-top: -8px; background: #fbf8f4; color: #75675e; }
+.review-policy > div { flex: 1; }
+.policy-check { margin-top: 11px; padding-top: 10px; display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 8px; border-top: 1px solid rgba(75, 54, 43, .12); color: #5d4b40; font-size: 9px; line-height: 1.45; }
+.policy-check input { margin-top: 2px; accent-color: #6b4b3b; }
+.success-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+@media (max-width: 720px) {
+  .success-actions { grid-template-columns: 1fr; }
 }
