@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import {
   ArrowRight,
   Ban,
@@ -35,6 +35,7 @@ import {
   X,
 } from 'lucide-react'
 import { endTimeForAppointment, formatClockTime, getAvailabilityForDate, parseClockTime } from './availability'
+import { TREATMENT_CATEGORIES, validateTreatment } from './serviceCatalog'
 
 const lotusLogo = `${import.meta.env.BASE_URL}earth-glory-lotus-logo.png`
 
@@ -50,7 +51,13 @@ const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Frida
 const blockingStatuses = new Set(['held', 'pending_payment', 'confirmed', 'arrived', 'in_service', 'completed'])
 
 function formatMoney(value) {
-  return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(value)
+  const amount = Number(value) || 0
+  return new Intl.NumberFormat('en-GB', {
+    style: 'currency',
+    currency: 'GBP',
+    minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(amount)
 }
 
 function dateFromKey(value) {
@@ -226,6 +233,7 @@ export function RoleWorkspace({
   onRecordPayment,
   onUpdateHours,
   onUpdateClient,
+  onSaveTreatment,
 }) {
   const baseConfig = roleConfig[role]
   const config = role === 'client'
@@ -235,6 +243,8 @@ export function RoleWorkspace({
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
   const [dialog, setDialog] = useState(null)
   const [notice, setNotice] = useState('')
+  const [highlightedTreatmentId, setHighlightedTreatmentId] = useState(null)
+  const [treatmentToEdit, setTreatmentToEdit] = useState(null)
   const allAppointments = [...otherAppointments, appointment]
 
   const showNotice = (message) => {
@@ -264,6 +274,28 @@ export function RoleWorkspace({
     onRecordPayment(amount, method)
     setDialog(null)
     showNotice('Sample payment recorded across Owner, Practitioner and Client views.')
+  }
+
+  const saveTreatment = (values, status, serviceId) => {
+    const treatment = onSaveTreatment(values, status, serviceId)
+    setHighlightedTreatmentId(treatment.id)
+    setTreatmentToEdit(null)
+    setDialog(null)
+    if (status === 'published') {
+      showNotice(`${treatment.name} ${serviceId ? 'updated' : 'published'} and available in Guest booking.`)
+    } else {
+      showNotice(`${treatment.name} ${serviceId ? 'updated as' : 'saved as'} a draft in this browser session.`)
+    }
+  }
+
+  const openAddTreatment = () => {
+    setTreatmentToEdit(null)
+    setDialog('treatment')
+  }
+
+  const openEditTreatment = (treatment) => {
+    setTreatmentToEdit(treatment)
+    setDialog('treatment')
   }
 
   const rescheduleAppointment = () => {
@@ -324,7 +356,7 @@ export function RoleWorkspace({
           {notice && <div className="workspace-notice" role="status"><CheckCircle2 size={16} /><span>{notice}</span></div>}
           {role === 'client' && <ClientView activePage={activePage} appointment={appointment} appointments={allAppointments} onStartBooking={onStartBooking} onOpenDetail={() => setDialog('detail')} onReschedule={onReschedule} onCancel={() => setDialog('cancel')} onUpdateClient={onUpdateClient} />}
           {role === 'practitioner' && <PractitionerView activePage={activePage} appointment={appointment} appointments={allAppointments} blocks={blocks} onStartBooking={onStartBooking} onOpenDetail={() => setDialog('detail')} onStatusChange={onStatusChange} onAddNote={() => setDialog('note')} />}
-          {role === 'owner' && <OwnerView activePage={activePage} appointment={appointment} appointments={allAppointments} blocks={blocks} services={services} operatingHours={operatingHours} practitionerHours={practitionerHours} bookingRules={bookingRules} onOpenDetail={() => setDialog('detail')} onAddBlock={() => setDialog('block')} onStartBooking={onStartBooking} onUpdateHours={onUpdateHours} onNavigate={selectPage} showNotice={showNotice} />}
+          {role === 'owner' && <OwnerView activePage={activePage} appointment={appointment} appointments={allAppointments} blocks={blocks} services={services} operatingHours={operatingHours} practitionerHours={practitionerHours} bookingRules={bookingRules} onOpenDetail={() => setDialog('detail')} onAddBlock={() => setDialog('block')} onAddTreatment={openAddTreatment} onEditTreatment={openEditTreatment} onStartBooking={onStartBooking} onUpdateHours={onUpdateHours} onNavigate={selectPage} showNotice={showNotice} highlightedTreatmentId={highlightedTreatmentId} />}
         </main>
       </div>
 
@@ -332,6 +364,7 @@ export function RoleWorkspace({
       {dialog === 'note' && <ServiceNoteDialog appointment={appointment} onClose={() => setDialog(null)} onSave={saveNote} />}
       {dialog === 'block' && <BlockTimeDialog appointment={appointment} appointments={allAppointments} blocks={blocks} onClose={() => setDialog(null)} onSave={addBlock} />}
       {dialog === 'payment' && <RecordPaymentDialog appointment={appointment} onClose={() => setDialog('detail')} onSave={recordPayment} />}
+      {dialog === 'treatment' && <AddTreatmentDialog treatment={treatmentToEdit} services={services} onClose={() => setDialog(null)} onSave={saveTreatment} />}
     </div>
   )
 }
@@ -590,11 +623,11 @@ function PractitionerTimeOff() {
   )
 }
 
-function OwnerView({ activePage, appointment, appointments, blocks, services, operatingHours, practitionerHours, bookingRules, onOpenDetail, onAddBlock, onStartBooking, onUpdateHours, onNavigate, showNotice }) {
+function OwnerView({ activePage, appointment, appointments, blocks, services, operatingHours, practitionerHours, bookingRules, onOpenDetail, onAddBlock, onAddTreatment, onEditTreatment, onStartBooking, onUpdateHours, onNavigate, showNotice, highlightedTreatmentId }) {
   if (activePage === 'calendar') return <OwnerCalendar appointment={appointment} appointments={appointments} blocks={blocks} onAddBlock={onAddBlock} onStartBooking={onStartBooking} onOpenDetail={onOpenDetail} />
   if (activePage === 'appointments') return <OwnerAppointments appointment={appointment} appointments={appointments} onStartBooking={onStartBooking} onOpenDetail={onOpenDetail} />
   if (activePage === 'clients') return <OwnerClients appointment={appointment} appointments={appointments} onOpenDetail={onOpenDetail} />
-  if (activePage === 'treatments') return <OwnerTreatments services={services} />
+  if (activePage === 'treatments') return <OwnerTreatments services={services} onAddTreatment={onAddTreatment} onEditTreatment={onEditTreatment} highlightedTreatmentId={highlightedTreatmentId} />
   if (activePage === 'team') return <OwnerTeam />
   if (activePage === 'payments') return <OwnerPayments appointment={appointment} appointments={appointments} onOpenDetail={onOpenDetail} />
   if (activePage === 'reports') return <OwnerReports appointments={appointments} />
@@ -627,7 +660,7 @@ function OwnerView({ activePage, appointment, appointments, blocks, services, op
           <div className="panel-title"><div><span>Configuration</span><small>3 prototype areas to review</small></div></div>
           <button type="button" onClick={() => onNavigate('settings')}><span className="attention-icon rose"><CreditCard size={18} /></span><span><strong>Payment mode</strong><small>Pay at venue is the active sample rule</small></span><ChevronRight size={17} /></button>
           <button type="button" onClick={() => onNavigate('settings')}><span className="attention-icon sand"><FileText size={18} /></span><span><strong>Opening and cancellation rules</strong><small>Review calculated availability inputs</small></span><ChevronRight size={17} /></button>
-          <button type="button" onClick={() => onNavigate('treatments')}><span className="attention-icon green"><CheckCircle2 size={18} /></span><span><strong>Service timing</strong><small>{services.length} treatments include duration and reset time</small></span><ChevronRight size={17} /></button>
+          <button type="button" onClick={() => onNavigate('treatments')}><span className="attention-icon green"><CheckCircle2 size={18} /></span><span><strong>Service timing</strong><small>{services.filter((service) => service.status === 'published').length} published treatments include duration and reset time</small></span><ChevronRight size={17} /></button>
         </article>
       </section>
       <section className="lower-grid">
@@ -677,8 +710,10 @@ function OwnerClients({ appointment, appointments, onOpenDetail }) {
   return <><PageHeading eyebrow="Owner workspace" title="Clients" subtitle="Business-wide client history, consent and follow-up." actions={<button className="workspace-primary" type="button" disabled><Plus size={17} /> Add client · preview</button>} /><section className="stats-grid three"><StatCard label="Clients in records" value={String(clientCount)} detail="Across sample appointments" Icon={UsersRound} /><StatCard label="Shared client" value={appointment.client.name.split(' ')[0]} detail={appointment.reference} Icon={Heart} tone="sand" /><StatCard label="Current balance" value={formatMoney(outstandingAmount(appointment))} detail={paymentStatus(appointment)} Icon={Bell} /></section><article className="panel"><div className="panel-title"><div><span>Recent client highlights</span><small>The full directory remains a later prototype slice</small></div></div><div className="people-list"><PersonRow initials={initialsFor(appointment.client.name)} name={appointment.client.name} detail={`${appointment.service.name} · ${statusLabel(appointment.status)}`} meta={`${formatAppointmentDate(appointment)} · ${formatClockTime(appointment.startTime)}`} onClick={onOpenDetail} /><PersonRow initials="SL" name="Sophie Lewis" detail="Sample history · Eyebrow Threading" meta="Completed" /><PersonRow initials="NP" name="Noah Patel" detail="Sample history · Shellac Manicure" meta="Confirmed" /></div></article></>
 }
 
-function OwnerTreatments({ services }) {
-  return <><PageHeading eyebrow="Owner workspace" title="Treatments" subtitle="Every published service has treatment time and protected reset time used by availability." actions={<button className="workspace-primary" type="button" disabled><Plus size={17} /> Add treatment · preview</button>} /><div className="info-note timing-note"><Clock3 size={18} /><p><strong>Availability uses total calendar time.</strong>A 60-minute massage with a 10-minute reset blocks 70 minutes, so it cannot be booked at 17:00 if another appointment begins at 17:45.</p></div><article className="panel service-admin-grid">{services.map((service) => <ServiceAdmin key={service.id} name={service.name} category={service.category} duration={`${service.duration} + ${service.bufferAfter} min`} price={formatMoney(service.price)} status="Published" />)}</article></>
+function OwnerTreatments({ services, onAddTreatment, onEditTreatment, highlightedTreatmentId }) {
+  const publishedCount = services.filter((service) => service.status === 'published').length
+  const draftCount = services.length - publishedCount
+  return <><PageHeading eyebrow="Owner workspace" title="Treatments" subtitle="Manage what clients can book and the calendar time each treatment protects." actions={<button className="workspace-primary" type="button" onClick={onAddTreatment}><Plus size={17} /> Add treatment</button>} /><section className="treatment-catalog-summary" aria-label="Treatment catalogue summary"><span><strong>{publishedCount}</strong> published</span><span><strong>{draftCount}</strong> {draftCount === 1 ? 'draft' : 'drafts'}</span><span><strong>{services.length}</strong> total</span></section><div className="info-note timing-note"><Clock3 size={18} /><p><strong>Availability uses total calendar time.</strong>A 60-minute massage with a 10-minute reset blocks 70 minutes, so it cannot be booked at 17:00 if another appointment begins at 17:45.</p></div><article className="panel service-admin-grid">{services.map((service) => <ServiceAdmin key={service.id} service={service} status={service.status === 'published' ? 'Published' : 'Draft'} highlighted={service.id === highlightedTreatmentId} onEdit={() => onEditTreatment(service)} />)}</article></>
 }
 
 function OwnerTeam() {
@@ -740,19 +775,146 @@ function AppointmentRow({ appointment, onClick }) {
   return <button className="record-row appointment-row-button" type="button" disabled={!onClick} onClick={onClick}><strong>{formatClockTime(appointment.startTime)}</strong><span>{appointment.client.name}</span><span>{appointment.service.name}</span><Status tone={statusTone(appointment.status)}>{statusLabel(appointment.status)}</Status><strong>{formatMoney(appointment.service.price)}</strong></button>
 }
 
-function ServiceAdmin({ name, category, duration, price, status }) {
-  return <div className="service-admin-row"><span className="service-admin-icon"><Scissors size={18} /></span><div><strong>{name}</strong><small>{category}</small></div><span>{duration}</span><strong>{price}</strong><Status tone={status === 'Published' ? 'green' : 'sand'}>{status}</Status><button type="button" disabled aria-label={`${name} editing is planned for the next prototype batch`}><MoreHorizontal size={18} /></button></div>
+function ServiceAdmin({ service, status, onEdit, highlighted = false }) {
+  const duration = service.duration ? `${service.duration} + ${service.bufferAfter} min` : 'Timing not set'
+  const price = service.price ? formatMoney(service.price) : 'Price not set'
+  return <div className={highlighted ? 'service-admin-row is-new' : 'service-admin-row'}><span className="service-admin-icon"><Scissors size={18} /></span><div><strong>{service.name}</strong><small>{service.category}</small></div><span>{duration}</span><strong>{price}</strong><Status tone={status === 'Published' ? 'green' : 'sand'}>{status}</Status><button className="service-admin-edit" type="button" onClick={onEdit} aria-label={`Edit ${service.name}`}>Edit</button></div>
+}
+
+const emptyTreatment = {
+  name: '',
+  category: '',
+  description: '',
+  duration: '30',
+  bufferAfter: '10',
+  price: '',
+}
+
+function treatmentFormValues(treatment) {
+  if (!treatment) return { ...emptyTreatment }
+  return {
+    name: treatment.name,
+    category: treatment.category === 'Uncategorised' ? '' : treatment.category,
+    description: treatment.description,
+    duration: treatment.duration ? String(treatment.duration) : '',
+    bufferAfter: String(treatment.bufferAfter ?? ''),
+    price: treatment.price ? String(treatment.price) : '',
+  }
+}
+
+function AddTreatmentDialog({ treatment, services, onClose, onSave }) {
+  const initialValues = treatmentFormValues(treatment)
+  const [values, setValues] = useState(initialValues)
+  const [errors, setErrors] = useState({})
+  const formRef = useRef(null)
+  const editing = Boolean(treatment)
+  const lastPublishedTreatment = treatment?.status === 'published'
+    && services.filter((service) => service.status === 'published').length === 1
+  const dirty = Object.keys(initialValues).some((key) => values[key] !== initialValues[key])
+  const duration = Number(values.duration)
+  const bufferAfter = Number(values.bufferAfter)
+  const hasCompleteTiming = values.duration !== '' && values.bufferAfter !== ''
+  const totalMinutes = hasCompleteTiming && Number.isFinite(duration + bufferAfter) && duration >= 0 && bufferAfter >= 0
+    ? duration + bufferAfter
+    : 0
+
+  const requestClose = useCallback(() => {
+    if (!dirty || window.confirm('Discard this treatment without saving?')) onClose()
+  }, [dirty, onClose])
+
+  const updateValue = (field, value) => {
+    setValues((current) => ({ ...current, [field]: value }))
+    setErrors((current) => {
+      if (!current[field]) return current
+      const next = { ...current }
+      delete next[field]
+      return next
+    })
+  }
+
+  const submit = (intent) => {
+    const otherServices = treatment ? services.filter((service) => service.id !== treatment.id) : services
+    const nextErrors = validateTreatment(values, otherServices, intent)
+    setErrors(nextErrors)
+    const firstError = Object.keys(nextErrors)[0]
+    if (firstError) {
+      window.requestAnimationFrame(() => formRef.current?.elements.namedItem(firstError)?.focus())
+      return
+    }
+    onSave(values, intent === 'publish' ? 'published' : 'draft', treatment?.id)
+  }
+
+  const errorFor = (field) => errors[field] ? `${field}-error` : undefined
+
+  return (
+    <PrototypeDialog
+      title={editing ? 'Edit treatment' : 'Add treatment'}
+      description={editing ? 'Update the client-facing details, timing and visibility for this treatment.' : 'Set what clients see and how much calendar time Earth Glory protects. Save a draft or publish it to Guest booking.'}
+      onClose={requestClose}
+      footer={<><button className="workspace-secondary" type="button" onClick={requestClose}>Cancel</button><button className="workspace-secondary" type="button" disabled={lastPublishedTreatment} title={lastPublishedTreatment ? 'Keep at least one treatment published for Guest booking.' : undefined} onClick={() => submit('draft')}>{editing && treatment.status === 'published' ? 'Move to draft' : 'Save draft'}</button><button className="workspace-primary" type="submit" form="add-treatment-form">{editing ? (treatment.status === 'published' ? 'Publish changes' : 'Publish treatment') : 'Publish treatment'}</button></>}
+    >
+      <p className="dialog-required-note" id="treatment-required-note"><span aria-hidden="true">*</span> Required to publish. A treatment name is enough to save a draft.</p>
+      <form ref={formRef} id="add-treatment-form" className="dialog-form-grid" aria-describedby="treatment-required-note" noValidate onSubmit={(event) => { event.preventDefault(); submit('publish') }}>
+        <label className="dialog-field full">
+          <span>Treatment name <b aria-hidden="true">*</b></span>
+          <input name="name" value={values.name} maxLength="80" aria-required="true" aria-invalid={Boolean(errors.name)} aria-describedby={errorFor('name')} onChange={(event) => updateValue('name', event.target.value)} placeholder="e.g. Calming facial" autoComplete="off" />
+          {errors.name && <small className="dialog-field-error" id="name-error">{errors.name}</small>}
+        </label>
+        <label className="dialog-field">
+          <span>Category <b aria-hidden="true">*</b></span>
+          <select name="category" value={values.category} aria-required="true" aria-invalid={Boolean(errors.category)} aria-describedby={errorFor('category')} onChange={(event) => updateValue('category', event.target.value)}>
+            <option value="">Choose a category</option>
+            {TREATMENT_CATEGORIES.map((item) => <option key={item} value={item}>{item}</option>)}
+          </select>
+          {errors.category && <small className="dialog-field-error" id="category-error">{errors.category}</small>}
+        </label>
+        <label className="dialog-field">
+          <span>Price (£) <b aria-hidden="true">*</b></span>
+          <input name="price" value={values.price} type="number" inputMode="decimal" min="0.01" max="9999.99" step="0.01" aria-required="true" aria-invalid={Boolean(errors.price)} aria-describedby={errorFor('price')} onChange={(event) => updateValue('price', event.target.value)} placeholder="45.00" />
+          {errors.price && <small className="dialog-field-error" id="price-error">{errors.price}</small>}
+        </label>
+        <label className="dialog-field full">
+          <span>Client description <b aria-hidden="true">*</b></span>
+          <textarea name="description" value={values.description} rows="4" maxLength="300" aria-required="true" aria-invalid={Boolean(errors.description)} aria-describedby={errorFor('description') || 'description-help'} onChange={(event) => updateValue('description', event.target.value)} placeholder="Describe the treatment, outcome and what the client can expect." />
+          <small id="description-help" className="dialog-field-help">{values.description.length}/300 characters</small>
+          {errors.description && <small className="dialog-field-error" id="description-error">{errors.description}</small>}
+        </label>
+        <label className="dialog-field">
+          <span>Treatment time <b aria-hidden="true">*</b></span>
+          <span className="dialog-input-suffix"><input name="duration" value={values.duration} type="number" inputMode="numeric" min="5" max="480" step="5" aria-required="true" aria-invalid={Boolean(errors.duration)} aria-describedby={errorFor('duration')} onChange={(event) => updateValue('duration', event.target.value)} /><em>min</em></span>
+          {errors.duration && <small className="dialog-field-error" id="duration-error">{errors.duration}</small>}
+        </label>
+        <label className="dialog-field">
+          <span>Reset time <b aria-hidden="true">*</b></span>
+          <span className="dialog-input-suffix"><input name="bufferAfter" value={values.bufferAfter} type="number" inputMode="numeric" min="0" max="120" step="5" aria-required="true" aria-invalid={Boolean(errors.bufferAfter)} aria-describedby={errorFor('bufferAfter')} onChange={(event) => updateValue('bufferAfter', event.target.value)} /><em>min</em></span>
+          {errors.bufferAfter && <small className="dialog-field-error" id="bufferAfter-error">{errors.bufferAfter}</small>}
+        </label>
+      </form>
+      <div className="treatment-live-summary" aria-live="polite">
+        <div><Clock3 size={18} /><span><small>Calendar protected</small><strong>{totalMinutes ? `${totalMinutes} minutes` : 'Complete the timing'}</strong></span></div>
+        <div><PoundSterling size={18} /><span><small>Client pays</small><strong>{Number(values.price) > 0 ? formatMoney(values.price) : 'Set a price'}</strong></span></div>
+        <div><UserCheck size={18} /><span><small>Practitioner</small><strong>Avni · automatically assigned</strong></span></div>
+      </div>
+      {lastPublishedTreatment && <div className="info-note treatment-publish-guard"><ShieldCheck size={18} /><p><strong>Keep one treatment published.</strong>Publish another treatment before moving this final option to Draft, so Guest booking never becomes an unexplained dead end.</p></div>}
+      <p className="dialog-session-note"><ShieldCheck size={17} /><span>This prototype saves the treatment only for this browser session. Reset demo or refresh restores the original catalogue.</span></p>
+    </PrototypeDialog>
+  )
 }
 
 function PrototypeDialog({ title, description, onClose, children, footer }) {
   const closeRef = useRef(null)
   const dialogRef = useRef(null)
+  const onCloseRef = useRef(onClose)
+
+  useEffect(() => {
+    onCloseRef.current = onClose
+  }, [onClose])
 
   useEffect(() => {
     const previous = document.activeElement
     const onKeyDown = (event) => {
       if (event.key === 'Escape') {
-        onClose()
+        onCloseRef.current()
         return
       }
       if (event.key !== 'Tab') return
@@ -778,9 +940,9 @@ function PrototypeDialog({ title, description, onClose, children, footer }) {
       document.body.classList.remove('modal-open')
       previous?.focus?.()
     }
-  }, [onClose])
+  }, [])
 
-  return <div className="booking-overlay" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section ref={dialogRef} className="prototype-dialog" role="dialog" aria-modal="true" aria-labelledby="prototype-dialog-title"><button ref={closeRef} className="dialog-close" type="button" onClick={onClose} aria-label="Close dialog"><X size={20} /></button><header><span className="workspace-eyebrow">Connected prototype</span><h2 id="prototype-dialog-title">{title}</h2>{description && <p>{description}</p>}</header><div className="prototype-dialog-body">{children}</div>{footer && <footer>{footer}</footer>}</section></div>
+  return <div className="booking-overlay" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}><section ref={dialogRef} className="prototype-dialog" role="dialog" aria-modal="true" aria-labelledby="prototype-dialog-title" aria-describedby={description ? 'prototype-dialog-description' : undefined}><button ref={closeRef} className="dialog-close" type="button" onClick={onClose} aria-label="Close dialog"><X size={20} /></button><header><span className="workspace-eyebrow">Connected prototype</span><h2 id="prototype-dialog-title">{title}</h2>{description && <p id="prototype-dialog-description">{description}</p>}</header><div className="prototype-dialog-body">{children}</div>{footer && <footer>{footer}</footer>}</section></div>
 }
 
 function AppointmentDetailDialog({ role, appointment, confirmCancel, onClose, onReschedule, onCancel, onRecordPayment }) {

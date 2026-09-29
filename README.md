@@ -23,7 +23,8 @@ A polished, responsive, non-transactional front-end concept for Earth Glory.
   1. Guest discovery and no-account booking
   2. Client appointment detail, rescheduling, cancellation, payment summary and preferences
   3. Practitioner schedule, client brief, appointment-status workflow and service note
-  4. Owner calendar, appointment detail, blocked time, sample payment recording, reports and editable operating hours
+  4. Owner calendar, appointment detail, treatment management, blocked time, sample payment recording, reports and editable operating hours
+- Owner treatment catalogue with validated add/edit and Draft/Published controls; published treatments flow immediately into Guest discovery, booking choices and calculated availability
 - Cross-role updates for the shared appointment, including booking/rescheduling, cancellation, practitioner status, service note, owner-recorded payment and activity history
 - A **Reset demo** action that restores the original sample scenario
 - Shareable role previews through `?role=client`, `?role=practitioner` and `?role=owner`; the clean URL opens the Guest view

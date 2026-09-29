@@ -30,11 +30,12 @@ import {
   minutesToClock,
   parseClockTime,
 } from './availability'
+import { createTreatmentRecord, publishedTreatments } from './serviceCatalog'
 
 const prototypeRoleIds = ['guest', 'client', 'practitioner', 'owner']
 const lotusLogo = `${import.meta.env.BASE_URL}earth-glory-lotus-logo.png`
 
-const services = [
+const initialServices = [
   {
     id: 'back-neck-shoulders',
     category: 'Massage',
@@ -46,6 +47,8 @@ const services = [
     price: 28,
     tone: 'sand',
     icon: Sparkles,
+    status: 'published',
+    practitionerIds: ['avni'],
   },
   {
     id: 'aromatherapy-massage',
@@ -58,6 +61,8 @@ const services = [
     price: 60,
     tone: 'clay',
     icon: Leaf,
+    status: 'published',
+    practitionerIds: ['avni'],
   },
   {
     id: 'shellac-manicure',
@@ -70,6 +75,8 @@ const services = [
     price: 30,
     tone: 'sage',
     icon: Heart,
+    status: 'published',
+    practitionerIds: ['avni'],
   },
   {
     id: 'high-frequency-facial',
@@ -82,6 +89,8 @@ const services = [
     price: 75,
     tone: 'rose',
     icon: Sparkles,
+    status: 'published',
+    practitionerIds: ['avni'],
   },
   {
     id: 'eyebrow-threading',
@@ -94,6 +103,8 @@ const services = [
     price: 8,
     tone: 'moss',
     icon: Leaf,
+    status: 'published',
+    practitionerIds: ['avni'],
   },
   {
     id: 'eyelash-tint',
@@ -106,8 +117,19 @@ const services = [
     price: 15,
     tone: 'plum',
     icon: Heart,
+    status: 'published',
+    practitionerIds: ['avni'],
   },
 ]
+
+const servicePresentation = {
+  Massage: { eyebrow: 'Restorative care', tone: 'sand', icon: Sparkles },
+  Nails: { eyebrow: 'Polished finish', tone: 'sage', icon: Heart },
+  Facials: { eyebrow: 'Tailored skincare', tone: 'rose', icon: Sparkles },
+  'Brows & lashes': { eyebrow: 'Natural definition', tone: 'moss', icon: Leaf },
+  Other: { eyebrow: 'Personal care', tone: 'clay', icon: Heart },
+  Uncategorised: { eyebrow: 'Draft treatment', tone: 'clay', icon: Sparkles },
+}
 
 const practitioners = [
   {
@@ -127,7 +149,13 @@ const faqs = [
 ]
 
 function formatMoney(value) {
-  return new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', maximumFractionDigits: 0 }).format(value)
+  const amount = Number(value) || 0
+  return new Intl.NumberFormat('en-GB', {
+    style: 'currency',
+    currency: 'GBP',
+    minimumFractionDigits: Number.isInteger(amount) ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(amount)
 }
 
 function formatLondonDate(date, options) {
@@ -225,10 +253,10 @@ function createInitialDemoState() {
   const dates = upcomingDates()
   const primaryDate = dateKey(dates[0])
   const secondDate = dateKey(dates[1])
-  const aromatherapy = services.find((service) => service.id === 'aromatherapy-massage')
-  const threading = services.find((service) => service.id === 'eyebrow-threading')
-  const shellac = services.find((service) => service.id === 'shellac-manicure')
-  const facial = services.find((service) => service.id === 'high-frequency-facial')
+  const aromatherapy = initialServices.find((service) => service.id === 'aromatherapy-massage')
+  const threading = initialServices.find((service) => service.id === 'eyebrow-threading')
+  const shellac = initialServices.find((service) => service.id === 'shellac-manicure')
+  const facial = initialServices.find((service) => service.id === 'high-frequency-facial')
   const lateFacialStart = sampleLateStart(primaryDate, facial.duration + facial.bufferAfter)
   const lateShellacStart = sampleLateStart(secondDate, shellac.duration + shellac.bufferAfter)
 
@@ -313,6 +341,7 @@ function createInitialDemoState() {
 
   return {
     revision: Date.now(),
+    services: initialServices.map((service) => ({ ...service, practitionerIds: [...service.practitionerIds] })),
     appointment,
     otherAppointments,
     blocks: [
@@ -387,6 +416,18 @@ function demoReducer(state, action) {
         ...state,
         blocks: [...state.blocks, { ...action.block, id: `block-${Date.now()}`, type: 'blocked' }],
       }
+    case 'ADD_SERVICE':
+      if (state.services.some((service) => service.name.toLowerCase() === action.service.name.toLowerCase())) return state
+      return {
+        ...state,
+        services: [...state.services, action.service],
+      }
+    case 'UPDATE_SERVICE':
+      if (state.services.some((service) => service.id !== action.service.id && service.name.toLowerCase() === action.service.name.toLowerCase())) return state
+      return {
+        ...state,
+        services: state.services.map((service) => service.id === action.service.id ? action.service : service),
+      }
     case 'UPDATE_HOURS':
       return {
         ...state,
@@ -421,7 +462,7 @@ function appointmentToBusyEvent(appointment) {
 function App() {
   const [demoState, dispatch] = useReducer(demoReducer, null, createInitialDemoState)
   const [bookingOpen, setBookingOpen] = useState(false)
-  const [selectedService, setSelectedService] = useState(services[0])
+  const [selectedService, setSelectedService] = useState(initialServices[0])
   const [bookingIntent, setBookingIntent] = useState({ mode: 'new', appointmentId: null })
   const [category, setCategory] = useState('All treatments')
   const [menuOpen, setMenuOpen] = useState(false)
@@ -429,10 +470,12 @@ function App() {
   const [activeRole, setActiveRole] = useState(roleFromLocation)
   const menuButtonRef = useRef(null)
 
-  const categories = ['All treatments', ...new Set(services.map((service) => service.category))]
-  const filteredServices = category === 'All treatments'
-    ? services
-    : services.filter((service) => service.category === category)
+  const bookableServices = useMemo(() => publishedTreatments(demoState.services), [demoState.services])
+  const categories = useMemo(() => ['All treatments', ...new Set(bookableServices.map((service) => service.category))], [bookableServices])
+  const visibleCategory = categories.includes(category) ? category : 'All treatments'
+  const filteredServices = visibleCategory === 'All treatments'
+    ? bookableServices
+    : bookableServices.filter((service) => service.category === visibleCategory)
   const busyEvents = useMemo(() => [
     appointmentToBusyEvent(demoState.appointment),
     ...demoState.otherAppointments.map(appointmentToBusyEvent),
@@ -475,11 +518,32 @@ function App() {
     return () => window.removeEventListener('keydown', closeMenu)
   }, [menuOpen])
 
-  function startBooking(service = services[0], options = {}) {
-    const resolvedService = services.find((item) => item.id === service?.id) ?? services[0]
+  function startBooking(service = bookableServices[0], options = {}) {
+    const isReschedule = options.mode === 'reschedule'
+    const resolvedService = isReschedule && service
+      ? service
+      : bookableServices.find((item) => item.id === service?.id) ?? bookableServices[0]
+    if (!resolvedService) return
     setSelectedService(resolvedService)
     setBookingIntent({ mode: options.mode ?? 'new', appointmentId: options.appointmentId ?? null })
     setBookingOpen(true)
+  }
+
+  function saveTreatment(values, status, serviceId = null) {
+    const existingService = demoState.services.find((service) => service.id === serviceId)
+    const otherServices = demoState.services.filter((service) => service.id !== serviceId)
+    const record = createTreatmentRecord(values, otherServices, status)
+    const presentation = servicePresentation[record.category] ?? servicePresentation.Uncategorised
+    const service = { ...existingService, ...record, ...presentation, id: existingService?.id ?? record.id }
+    dispatch({ type: existingService ? 'UPDATE_SERVICE' : 'ADD_SERVICE', service })
+    return service
+  }
+
+  function resetDemo() {
+    dispatch({ type: 'RESET' })
+    setSelectedService(initialServices[0])
+    setCategory('All treatments')
+    setBookingOpen(false)
   }
 
   function completeBooking({ service, date, time, details, mode }) {
@@ -541,7 +605,7 @@ function App() {
         <p>Four connected user views · No live bookings or payments</p>
       </div>
 
-      <RoleSwitcher activeRole={activeRole} onChange={switchRole} onReset={() => dispatch({ type: 'RESET' })} />
+      <RoleSwitcher activeRole={activeRole} onChange={switchRole} onReset={resetDemo} />
 
       {activeRole === 'guest' ? (
         <>
@@ -635,8 +699,8 @@ function App() {
               <button
                 key={item}
                 type="button"
-                className={category === item ? 'active' : ''}
-                aria-pressed={category === item}
+                className={visibleCategory === item ? 'active' : ''}
+                aria-pressed={visibleCategory === item}
                 onClick={() => setCategory(item)}
               >
                 {item}
@@ -812,7 +876,7 @@ function App() {
           appointment={demoState.appointment}
           otherAppointments={demoState.otherAppointments}
           blocks={demoState.blocks}
-          services={services}
+          services={demoState.services}
           operatingHours={demoState.operatingHours}
           practitionerHours={demoState.practitionerHours}
           bookingRules={demoState.bookingRules}
@@ -825,11 +889,13 @@ function App() {
           onRecordPayment={(amount, method) => dispatch({ type: 'RECORD_PAYMENT', amount, method })}
           onUpdateHours={(payload) => dispatch({ type: 'UPDATE_HOURS', ...payload })}
           onUpdateClient={(client) => dispatch({ type: 'UPDATE_CLIENT', client })}
+          onSaveTreatment={saveTreatment}
         />
       )}
 
       {bookingOpen && (
         <BookingDialog
+          services={bookableServices}
           initialService={selectedService}
           visitorType={activeRole === 'client' ? 'client' : 'guest'}
           mode={bookingIntent.mode}
@@ -849,6 +915,7 @@ function App() {
 }
 
 function BookingDialog({
+  services,
   initialService,
   visitorType = 'guest',
   mode = 'new',
@@ -893,6 +960,7 @@ function BookingDialog({
   }), [bookingRules.slotIntervalMinutes, busyEvents, date, existingAppointment?.id, mode, operatingHours, practitionerHours, service])
   const resolvedTime = availability.slots.some((slot) => slot.start === time && slot.available) ? time : ''
   const selectedSlot = availability.slots.find((slot) => slot.start === resolvedTime)
+  const atJourneyStart = step === 1 || (mode === 'reschedule' && step === 2)
 
   useEffect(() => {
     returnFocusRef.current = document.activeElement
@@ -1128,8 +1196,8 @@ function BookingDialog({
             </aside>
 
             <div className="booking-footer">
-              <button className="back-button" type="button" onClick={() => step === 1 ? onClose() : setStep((current) => current - 1)}>
-                <ArrowLeft size={17} /> {step === 1 ? 'Close' : 'Back'}
+              <button className="back-button" type="button" onClick={() => atJourneyStart ? onClose() : setStep((current) => current - 1)}>
+                <ArrowLeft size={17} /> {atJourneyStart ? 'Close' : 'Back'}
               </button>
               <div className="step-dots" aria-hidden="true">{[1, 2, 3, 4].map((item) => <span key={item} className={item <= step ? 'active' : ''} />)}</div>
               <button

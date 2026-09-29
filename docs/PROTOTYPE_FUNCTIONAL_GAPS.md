@@ -17,7 +17,7 @@ The prototype now provides:
 - session-only booking, rescheduling, cancellation, practitioner status, service-note and payment updates that remain visible when switching roles;
 - a booking reference, Client appointment detail, appointment history tabs, calendar download and directions;
 - Practitioner Arrived, In service, Completed and No-show actions;
-- Owner appointment detail, blocked-time creation, sample payment recording and editable operating hours;
+- Owner appointment detail, Draft/Published treatment management, blocked-time creation, sample payment recording and editable operating hours;
 - calculated Guest availability driven by operating hours, practitioner hours, service timing and protected calendar events; and
 - visibly disabled or preview-labelled controls for several workflows that are not yet implemented.
 
@@ -37,7 +37,7 @@ Intervals use normal back-to-back scheduling semantics: an appointment may start
 
 Example: a 60-minute treatment with a 10-minute reset starting at 17:00 protects the calendar until 18:10. It is unavailable when another appointment starts at 17:45, even though 17:00 itself looks empty. A 30-minute treatment with a 10-minute reset can fit before 17:45 if no other appointment, break, block or closing boundary conflicts.
 
-The automated availability checks cover adjacency, late-booking overlap, short-service fit, closing-time overflow, breaks, cancellation, rescheduling and closed practitioner days.
+The automated checks cover catalogue validation and Draft/Published visibility plus availability adjacency, newly created treatment timing, late-booking overlap, short-service fit, closing-time overflow, breaks, cancellation, rescheduling and closed practitioner days.
 
 ## Status legend
 
@@ -58,8 +58,8 @@ The automated availability checks cover adjacency, late-booking overlap, short-s
 | PF-007 | Partial | Owner appointment operations | The shared appointment opens from Owner surfaces and supports sample payment recording. Edit, reassign, owner cancellation/no-show, notification resend and refund interactions remain. |
 | PF-008 | Partial | Owner-created bookings and blocked time | Owner **Create appointment**, **New appointment** and Practitioner **Add walk-in** open the connected booking flow, preserve earlier records and make the newest record active across roles. Owner blocked time immediately affects Guest slots. Purpose-built staff entry, client lookup and override wording remain. |
 | PF-009 | Partial | Connected calendar and availability | Operating hours, fixed sample practitioner hours, service duration/reset, appointments, breaks and owner blocks govern Guest slots. Editable practitioner shifts, time-off approval and broader calendar navigation remain. |
-| PF-010 | Partial | Owner setup-to-publish flow | Owner can edit operating hours and see the change applied immediately. Business details, booking rules, policy/payment editors and Draft, Review and Published states remain. |
-| PF-011 | Partial | Treatment catalogue control | Guest and Owner use the same six-service catalogue and each service visibly includes duration and reset time. Add/edit/publish/unpublish, practitioner eligibility, preparation and patch-test controls remain. |
+| PF-010 | Partial | Owner setup-to-publish flow | Owner can edit operating hours and see the change applied immediately. Treatment Draft/Published management is represented, while business details, booking rules, policy/payment editors and the wider business setup Review lifecycle remain. |
+| PF-011 | Partial | Treatment catalogue control | Owner can add and edit a validated treatment with category, description, price, treatment time and reset time, and move it between Draft and Published. Published treatments immediately appear in Guest discovery and booking; Drafts remain Owner-only, and Avni is assigned automatically. Archive/delete, configurable practitioner eligibility, preparation and patch-test controls remain. |
 | PF-012 | Partial | Payment-to-receipt loop | Owner can record a sample balance payment and Client sees the updated state. Cancelling a paid sample appointment records a matching simulated full refund. A dedicated receipt and manual partial-refund flow remain. |
 | PF-013 | Partial | Shared activity timeline | Booking, rescheduling, cancellation, status, service-note and payment actions append shared events. Refund and notification events remain because their workflows are not implemented. |
 | PF-014 | Partial | Clear interaction feedback | Implemented actions open a flow or change state, and many deferred controls are disabled and labelled **preview**. A final audit of every navigation, search, notification and secondary control remains. |
@@ -97,8 +97,8 @@ The automated availability checks cover adjacency, late-booking overlap, short-s
 - Only the primary shared appointment has the full interaction lifecycle; seeded supporting appointments are mostly read-only calendar context.
 - Newly confirmed bookings are retained as separate schedule records, but only the newest active record has the full cross-role detail/status/payment interaction lifecycle.
 - Practitioner working hours are fixed sample data; only business operating hours are currently editable.
-- Time off, staff/resource assignment, multi-room capacity and treatment-specific practitioner eligibility are not modelled.
-- Owner hour changes apply immediately with basic time-order validation; Draft, Review and Published setup states are not yet represented.
+- Time off, configurable staff/resource assignment, multi-room capacity and treatment-specific practitioner eligibility are not modelled; new treatments are assigned to Avni automatically.
+- Owner hour changes apply immediately with basic time-order validation; the wider business setup Review lifecycle is not represented beyond treatment-level Draft/Published control.
 - Payment is a simulated balance update only; there is no receipt document, refund, failure or reconciliation scenario.
 - Client identity uses direct role preview rather than a simulated secure-link or verification transition.
 - State is kept in page memory only and resets on refresh. There is no API, database, concurrency protection or external side effect.
@@ -123,6 +123,6 @@ All data may reset deliberately and no external side effect is required, but the
 1. Finish direct confirmation actions, service preparation/policy detail and a dedicated receipt.
 2. Add refund and cancellation-exception scenarios with matching activity events.
 3. Add practitioner shift/time-off editing and connect it to the existing availability engine.
-4. Add Owner treatment editing/publishing and setup Draft, Review and Published states.
+4. Add Owner treatment archiving and the wider setup Review state.
 5. Add simulated secure-link/contact verification, client profile persistence and client history.
 6. Add review submission/Owner reply, action centre, report filters and remaining edge states.
