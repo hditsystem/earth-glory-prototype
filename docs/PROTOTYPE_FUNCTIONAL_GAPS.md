@@ -12,16 +12,18 @@ The prototype can remain front-end-only. Implemented behaviour uses session-only
 
 The prototype now provides:
 
-- a responsive Earth Glory public website with treatment filtering and a four-step booking dialog;
+- a responsive Earth Glory public website whose primary live-booking actions open the official Treatwell flow;
+- an explicitly secondary four-step booking preview using sample services, availability, contact details, policy and payment state;
 - Guest, Client, Practitioner and Owner previews connected to one active shared appointment plus supporting schedule records;
 - session-only booking, rescheduling, cancellation, practitioner status, service-note and payment updates that remain visible when switching roles;
 - a booking reference, Client appointment detail, appointment history tabs, calendar download and directions;
 - Practitioner Arrived, In service, Completed and No-show actions;
 - Owner appointment detail, Draft/Published treatment management, blocked-time creation, sample payment recording and editable operating hours;
 - calculated Guest availability driven by operating hours, practitioner hours, service timing and protected calendar events; and
+- an Owner **Booking connection** page showing Treatwell as the current source of truth, the live link as configured but not monitored, and appointment import/write-back as not connected; and
 - visibly disabled or preview-labelled controls for several workflows that are not yet implemented.
 
-This is still a browser-only feedback model. Refreshing the page or selecting **Reset demo** restores the seed scenario, and no appointment, payment, email or SMS is created outside the page.
+This is still a browser-only feedback model. Refreshing the page or selecting **Reset demo** restores the seed scenario, and no appointment, payment, email or SMS is created outside the page. Treatwell does not read these sample changes, and this prototype does not read or update the Treatwell calendar.
 
 ## Calculated availability now demonstrated
 
@@ -49,20 +51,21 @@ The automated checks cover catalogue validation and Draft/Published visibility p
 
 | ID | Status | Functional area | Current implementation and remaining gap |
 |---|---|---|---|
-| PF-001 | Implemented | Shared demo appointment | Guest confirmation creates a session-only active appointment used by Client, Practitioner and Owner while preserving earlier records as schedule/history context. Reference, client, service, date, time, price, payment state, status and activity remain until refresh or **Reset demo**. |
-| PF-002 | Partial | Guest confirmation and handoff | Confirmation shows the booking reference and **Manage this demo booking**, which opens Client. Calendar download and directions are available in Client; they should also be offered directly on confirmation. |
+| PF-001 | Implemented | Shared demo appointment | Finishing the preview creates a session-only active sample used by Client, Practitioner and Owner while preserving earlier records as schedule/history context. Reference, client, service, date, time, price, payment state, status and activity remain until refresh or **Reset demo**. Treatwell is not changed. |
+| PF-002 | Partial | Guest preview completion and handoff | Completion states that no appointment was booked, offers **Book for real on Treatwell**, and can open the sample in Client. A clearly marked demo calendar download and directions are available in Client; they could also be offered directly on completion. |
 | PF-003 | Implemented | Booking commitment step | Review shows provider, service, protected calendar time, venue, price, simulated pay-at-venue terms, £0 due now and required sample-policy acceptance. Final owner-approved cancellation/no-show wording is still content work. |
 | PF-004 | Partial | Client appointment detail | Detail shows status, reference, treatment, practitioner, time, protected reset, venue, payment and activity. Accepted-policy and service-specific preparation/intake details still need a dedicated presentation. |
 | PF-005 | Implemented | Client reschedule and cancellation | Rescheduling reuses calculated availability and excludes the appointment being moved. Cancellation updates the shared state and removes that appointment from blocking availability. Both changes appear across roles. |
 | PF-006 | Partial | Practitioner delivery workflow | Arrived, In service, Completed and No-show plus a shared staff service note are implemented. Rich intake, consent/preparation and a functional review/rebook handoff after completion remain. |
 | PF-007 | Partial | Owner appointment operations | The shared appointment opens from Owner surfaces and supports sample payment recording. Edit, reassign, owner cancellation/no-show, notification resend and refund interactions remain. |
-| PF-008 | Partial | Owner-created bookings and blocked time | Owner **Create appointment**, **New appointment** and Practitioner **Add walk-in** open the connected booking flow, preserve earlier records and make the newest record active across roles. Owner blocked time immediately affects Guest slots. Purpose-built staff entry, client lookup and override wording remain. |
+| PF-008 | Partial | Owner-created demo bookings and blocked time | Owner **Create demo appointment**, **New demo appointment**, **Try demo block** and Practitioner **Add demo walk-in** update only the connected sample flow and state that Treatwell is unchanged. Purpose-built staff entry, client lookup and override wording remain. |
 | PF-009 | Partial | Connected calendar and availability | Operating hours, fixed sample practitioner hours, service duration/reset, appointments, breaks and owner blocks govern Guest slots. Editable practitioner shifts, time-off approval and broader calendar navigation remain. |
 | PF-010 | Partial | Owner setup-to-publish flow | Owner can edit operating hours and see the change applied immediately. Treatment Draft/Published management is represented, while business details, booking rules, policy/payment editors and the wider business setup Review lifecycle remain. |
-| PF-011 | Partial | Treatment catalogue control | Owner can add and edit a validated treatment with category, description, price, treatment time and reset time, and move it between Draft and Published. Published treatments immediately appear in Guest discovery and booking; Drafts remain Owner-only, and Avni is assigned automatically. Archive/delete, configurable practitioner eligibility, preparation and patch-test controls remain. |
+| PF-011 | Partial | Treatment catalogue control | Owner can add and edit a validated treatment with category, description, price, treatment time and reset time, and move it between Draft and Published in the website prototype. Drafts remain Owner-only, Avni is assigned automatically, and the UI states that the Treatwell catalogue is separate. Archive/delete, Treatwell service mapping, configurable practitioner eligibility, preparation and patch-test controls remain. |
 | PF-012 | Partial | Payment-to-receipt loop | Owner can record a sample balance payment and Client sees the updated state. Cancelling a paid sample appointment records a matching simulated full refund. A dedicated receipt and manual partial-refund flow remain. |
 | PF-013 | Partial | Shared activity timeline | Booking, rescheduling, cancellation, status, service-note and payment actions append shared events. Refund and notification events remain because their workflows are not implemented. |
 | PF-014 | Partial | Clear interaction feedback | Implemented actions open a flow or change state, and many deferred controls are disabled and labelled **preview**. A final audit of every navigation, search, notification and secondary control remains. |
+| PF-015 | Implemented | Treatwell transition boundary | Public live actions use the configured official Earth Glory Treatwell destination. Persistent workspace and checkout notices state that sample data is not synchronized, and Owner can inspect live-link/import/write-back status on **Booking connection**. |
 
 ## P1: important prototype coverage
 
@@ -102,6 +105,7 @@ The automated checks cover catalogue validation and Draft/Published visibility p
 - Payment is a simulated balance update only; there is no receipt document, refund, failure or reconciliation scenario.
 - Client identity uses direct role preview rather than a simulated secure-link or verification transition.
 - State is kept in page memory only and resets on refresh. There is no API, database, concurrency protection or external side effect.
+- The configured Treatwell link does not provide appointment import, write-back, webhook status or service mapping. Those require a supported integration and production backend.
 - Start times use a fixed 30-minute grid. Lead time, booking horizon, cleanup resources, overnight shifts and daylight-saving edge cases are outside the present prototype.
 
 ## Prototype definition of done
@@ -109,7 +113,7 @@ The automated checks cover catalogue validation and Draft/Published visibility p
 The current build supports the central connected path through steps 1–5 below; receipt/review and refund-exception completion remain open:
 
 1. **Works:** Reset the demo.
-2. **Works:** As Guest, choose a treatment and calculated slot, complete sample contact information, review price and policy, and simulate confirmation.
+2. **Works:** As Guest, either open the current live Treatwell booking route or explicitly preview a sample treatment, calculated slot, contact information, price and policy, ending with **No appointment was booked**.
 3. **Works:** Open the booking as Client, inspect it and reschedule or cancel it.
 4. **Works:** Switch to Practitioner, see the shared time, mark the client Arrived and In service, add a note, and complete the visit.
 5. **Works:** Switch to Owner, see the same status and event history, and record the balance paid.

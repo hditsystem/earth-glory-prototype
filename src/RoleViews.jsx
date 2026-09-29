@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Clock3,
   CreditCard,
+  ExternalLink,
   FileText,
   Heart,
   LayoutDashboard,
@@ -22,6 +23,7 @@ import {
   Plus,
   PoundSterling,
   Receipt,
+  RefreshCw,
   Scissors,
   Search,
   Settings2,
@@ -35,14 +37,15 @@ import {
   X,
 } from 'lucide-react'
 import { endTimeForAppointment, formatClockTime, getAvailabilityForDate, parseClockTime } from './availability'
+import { LIVE_BOOKING_PROVIDER } from './bookingProvider'
 import { TREATMENT_CATEGORIES, validateTreatment } from './serviceCatalog'
 
 const lotusLogo = `${import.meta.env.BASE_URL}earth-glory-lotus-logo.png`
 
 const prototypeRoles = [
-  { id: 'guest', label: 'Guest', detail: 'Discover and book' },
-  { id: 'client', label: 'Client', detail: 'Manage my visits' },
-  { id: 'practitioner', label: 'Practitioner', detail: 'Deliver today’s care' },
+  { id: 'guest', label: 'Guest', detail: 'Discover and preview' },
+  { id: 'client', label: 'Client', detail: 'Manage sample visit' },
+  { id: 'practitioner', label: 'Practitioner', detail: 'Deliver sample care' },
   { id: 'owner', label: 'Owner', detail: 'Run Earth Glory' },
 ]
 
@@ -167,6 +170,7 @@ const roleConfig = {
       ['team', 'Team', UserCheck],
       ['payments', 'Payments', CreditCard],
       ['reports', 'Reports', BarChart3],
+      ['booking-connection', 'Booking connection', RefreshCw],
       ['settings', 'Settings', Settings2],
     ],
   },
@@ -194,7 +198,7 @@ export function RoleSwitcher({ activeRole, onChange, onReset }) {
     <section className="role-switcher" aria-label="Choose a prototype view">
       <div className="role-switcher-intro">
         <strong>Preview as</strong>
-        <span>Follow one booking through each user view</span>
+        <span>Follow one sample booking through each user view</span>
       </div>
       <div className="role-options">
         {prototypeRoles.map((role) => (
@@ -255,7 +259,7 @@ export function RoleWorkspace({
   const cancelAppointment = () => {
     onCancel()
     setDialog(null)
-    showNotice('Demo appointment cancelled. Every role now shows the same state.')
+    showNotice('Demo appointment cancelled across the sample views. Treatwell was not changed.')
   }
 
   const saveNote = (note) => {
@@ -267,13 +271,13 @@ export function RoleWorkspace({
   const addBlock = (block) => {
     onAddBlock(block)
     setDialog(null)
-    showNotice('Blocked time added. Overlapping Guest slots are now unavailable.')
+    showNotice('Demo block added to sample availability. Treatwell was not changed.')
   }
 
   const recordPayment = (amount, method) => {
     onRecordPayment(amount, method)
     setDialog(null)
-    showNotice('Sample payment recorded across Owner, Practitioner and Client views.')
+    showNotice('Sample payment recorded across the prototype views. No money moved and Treatwell was not changed.')
   }
 
   const saveTreatment = (values, status, serviceId) => {
@@ -282,9 +286,9 @@ export function RoleWorkspace({
     setTreatmentToEdit(null)
     setDialog(null)
     if (status === 'published') {
-      showNotice(`${treatment.name} ${serviceId ? 'updated' : 'published'} and available in Guest booking.`)
+      showNotice(`${treatment.name} ${serviceId ? 'updated' : 'published'} in this website prototype. Treatwell was not changed.`)
     } else {
-      showNotice(`${treatment.name} ${serviceId ? 'updated as' : 'saved as'} a draft in this browser session.`)
+      showNotice(`${treatment.name} ${serviceId ? 'updated as' : 'saved as'} a draft in this browser session. Treatwell was not changed.`)
     }
   }
 
@@ -352,7 +356,7 @@ export function RoleWorkspace({
         </header>
 
         <main className="workspace-main" id="role-workspace-main">
-          <div className="prototype-boundary"><Sparkles size={15} /><span><strong>{config.eyebrow} prototype</strong> — connected session-only data; no live booking, payment or message is created.</span></div>
+          <div className="prototype-boundary"><Sparkles size={15} /><span><strong>{config.eyebrow} workflow preview</strong> — sample data is not imported from or written back to Treatwell. Actions change this browser session only.</span></div>
           {notice && <div className="workspace-notice" role="status"><CheckCircle2 size={16} /><span>{notice}</span></div>}
           {role === 'client' && <ClientView activePage={activePage} appointment={appointment} appointments={allAppointments} onStartBooking={onStartBooking} onOpenDetail={() => setDialog('detail')} onReschedule={onReschedule} onCancel={() => setDialog('cancel')} onUpdateClient={onUpdateClient} />}
           {role === 'practitioner' && <PractitionerView activePage={activePage} appointment={appointment} appointments={allAppointments} blocks={blocks} onStartBooking={onStartBooking} onOpenDetail={() => setDialog('detail')} onStatusChange={onStatusChange} onAddNote={() => setDialog('note')} />}
@@ -423,29 +427,29 @@ function ClientView({ activePage, appointment, appointments, onStartBooking, onO
       <PageHeading
         eyebrow="Client portal"
         title={`Welcome back, ${appointment.client.name.split(' ')[0]}`}
-        subtitle="View and manage your Earth Glory appointments."
-        actions={<button className="workspace-primary" type="button" onClick={() => onStartBooking(appointment.service)}><Plus size={17} /> {cancelled || past ? 'Book again' : 'Book a treatment'}</button>}
+        subtitle="Review and manage a sample Earth Glory appointment workflow."
+        actions={<button className="workspace-primary" type="button" onClick={() => onStartBooking(appointment.service)}><Plus size={17} /> {cancelled || past ? 'Try rebooking demo' : 'Try booking demo'}</button>}
       />
       <FlowStrip active={past ? 3 : 1} />
       <section className="client-home-grid">
         <article className="next-appointment-card">
-          <div className="card-heading"><span><CalendarDays size={18} /> {cancelled || past ? 'Most recent booking' : 'Next appointment'}</span><Status tone={statusTone(appointment.status)}>{statusLabel(appointment.status)}</Status></div>
+          <div className="card-heading"><span><CalendarDays size={18} /> {cancelled || past ? 'Most recent sample' : 'Sample next appointment'}</span><Status tone={statusTone(appointment.status)}>Demo · {statusLabel(appointment.status)}</Status></div>
           <div className="appointment-date-block"><strong>{formatAppointmentDate(appointment)}</strong><span>{formatClockTime(appointment.startTime)}</span></div>
           <div className="appointment-main-copy">
             <span className="appointment-monogram">A</span>
             <div><h2>{appointment.service.name}</h2><p>{appointment.service.duration} minutes with {appointment.practitioner.name}</p><small><MapPin size={13} /> West Kensington · {appointment.reference}</small></div>
           </div>
           <div className="appointment-actions">
-            <button className="workspace-primary" type="button" onClick={onOpenDetail}>View appointment</button>
-            {manageable && <button className="workspace-secondary" type="button" onClick={onReschedule}>Reschedule</button>}
-            {manageable && <button className="workspace-text-danger" type="button" onClick={onCancel}>Cancel</button>}
+            <button className="workspace-primary" type="button" onClick={onOpenDetail}>View sample</button>
+            {manageable && <button className="workspace-secondary" type="button" onClick={onReschedule}>Preview reschedule</button>}
+            {manageable && <button className="workspace-text-danger" type="button" onClick={onCancel}>Preview cancellation</button>}
           </div>
         </article>
 
         <article className="panel quick-actions-panel">
           <div className="panel-title"><div><span>Quick actions</span><small>Everything for your next visit</small></div></div>
-          <button type="button" onClick={() => onStartBooking(appointment.service)}><span className="action-icon"><CalendarPlus size={18} /></span><span><strong>Book another treatment</strong><small>Preselect {appointment.service.name}</small></span><ChevronRight size={17} /></button>
-          <a href={`data:text/calendar;charset=utf-8,${encodeURIComponent(`BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:${appointment.service.name} at Earth Glory\nDTSTART:${appointment.dateKey.replaceAll('-', '')}T${appointment.startTime.replace(':', '')}00\nEND:VEVENT\nEND:VCALENDAR`)}`} download={`${appointment.reference}.ics`}><span className="action-icon"><CalendarDays size={18} /></span><span><strong>Add to calendar</strong><small>Download a sample reminder</small></span><ChevronRight size={17} /></a>
+          <button type="button" onClick={() => onStartBooking(appointment.service)}><span className="action-icon"><CalendarPlus size={18} /></span><span><strong>Preview another booking</strong><small>Session-only · preselect {appointment.service.name}</small></span><ChevronRight size={17} /></button>
+          <a href={`data:text/calendar;charset=utf-8,${encodeURIComponent(`BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nSUMMARY:DEMO — ${appointment.service.name} at Earth Glory\nDESCRIPTION:Prototype event only. This is not a real Earth Glory appointment.\nDTSTART:${appointment.dateKey.replaceAll('-', '')}T${appointment.startTime.replace(':', '')}00\nEND:VEVENT\nEND:VCALENDAR`)}`} download={`${appointment.reference}-DEMO.ics`}><span className="action-icon"><CalendarDays size={18} /></span><span><strong>Download demo calendar event</strong><small>Clearly marked as a prototype reminder</small></span><ChevronRight size={17} /></a>
           <a href="https://www.google.com/maps/search/?api=1&query=141%20North%20End%20Road%20London%20W14%209NH" target="_blank" rel="noreferrer"><span className="action-icon"><MapPin size={18} /></span><span><strong>Get directions</strong><small>141 North End Road</small></span><ChevronRight size={17} /></a>
         </article>
       </section>
@@ -455,7 +459,7 @@ function ClientView({ activePage, appointment, appointments, onStartBooking, onO
           <div className="panel-title"><div><span>Your appointment journey</span><small>One record shared across every view</small></div><button type="button" onClick={onOpenDetail}>View details</button></div>
           <div className="journey-list">
             <div className="done"><span><Check size={13} /></span><p><strong>Booking recorded in this session</strong><small>Sample confirmation for {appointment.client.email}</small></p></div>
-            <div className={!completed && !cancelled ? 'current' : ''}><span><Bell size={13} /></span><p><strong>Reminder before your visit</strong><small>Preparation and arrival details</small></p></div>
+            <div className={!completed && !cancelled ? 'current' : ''}><span><Bell size={13} /></span><p><strong>Sample reminder before the visit</strong><small>Proposed preparation and arrival details</small></p></div>
             <div className={appointment.status === 'arrived' || appointment.status === 'in_service' ? 'current' : completed ? 'done' : ''}><span><Heart size={13} /></span><p><strong>Visit Earth Glory</strong><small>{formatAppointmentDate(appointment, { weekday: 'long', day: 'numeric', month: 'long' })} at {formatClockTime(appointment.startTime)}</small></p></div>
             <div className={past ? 'current' : ''}><span><MessageSquareText size={13} /></span><p><strong>{completed ? 'Review or book again' : cancelled || appointment.status === 'no_show' ? 'Book again when ready' : 'Review or book again'}</strong><small>{completed ? 'Unlocked by Practitioner completion' : appointment.status === 'no_show' ? 'The missed appointment remains in history' : 'Available after your completed visit'}</small></p></div>
           </div>
@@ -493,19 +497,19 @@ function ClientAppointments({ appointment, appointments, onStartBooking, onOpenD
 
   return (
     <>
-      <PageHeading eyebrow="Client portal" title="Your appointments" subtitle="Manage upcoming visits and revisit past treatments." actions={<button className="workspace-primary" type="button" onClick={() => onStartBooking(appointment.service)}><Plus size={17} /> Book again</button>} />
+      <PageHeading eyebrow="Client portal" title="Your appointments" subtitle="Preview upcoming visits and past treatments using sample data." actions={<button className="workspace-primary" type="button" onClick={() => onStartBooking(appointment.service)}><Plus size={17} /> Try rebooking demo</button>} />
       <div className="segmented-tabs"><button className={activeTab === 'upcoming' ? 'active' : ''} type="button" onClick={() => setActiveTab('upcoming')}>Upcoming <span>{counts.upcoming}</span></button><button className={activeTab === 'past' ? 'active' : ''} type="button" onClick={() => setActiveTab('past')}>Past <span>{counts.past}</span></button><button className={activeTab === 'cancelled' ? 'active' : ''} type="button" onClick={() => setActiveTab('cancelled')}>Cancelled <span>{counts.cancelled}</span></button></div>
       {visibleAppointments.length ? visibleAppointments.map((item) => {
         const isShared = item.id === appointment.id
         const manageable = isShared && canClientManage(item)
         return <article className="panel appointment-detail-card" key={item.id}>
           <div className="appointment-detail-date"><span>{formatAppointmentDate(item, { month: 'short' }).toUpperCase()}</span><strong>{formatAppointmentDate(item, { day: 'numeric' })}</strong><small>{formatClockTime(item.startTime)}</small></div>
-          <div className="appointment-detail-copy"><Status tone={statusTone(item.status)}>{statusLabel(item.status)}</Status><h2>{item.service.name}</h2><p>{item.service.duration} minutes with {item.practitioner.name}</p><small><MapPin size={14} /> {venue}</small></div>
+          <div className="appointment-detail-copy"><Status tone={statusTone(item.status)}>Demo · {statusLabel(item.status)}</Status><h2>{item.service.name}</h2><p>{item.service.duration} minutes with {item.practitioner.name}</p><small><MapPin size={14} /> {venue}</small></div>
           <div className="appointment-detail-price"><small>{paymentStatus(item)}</small><strong>{formatMoney(item.service.price)}</strong><span>{item.reference}</span></div>
-          <div className="appointment-detail-buttons"><button className="workspace-primary" type="button" disabled={!isShared} onClick={isShared ? onOpenDetail : undefined}>{isShared ? 'View appointment' : 'Read-only sample'}</button>{manageable && <button className="workspace-secondary" type="button" onClick={onReschedule}>Reschedule</button>}{manageable && <button className="workspace-secondary" type="button" onClick={onCancel}>Cancel</button>}</div>
+          <div className="appointment-detail-buttons"><button className="workspace-primary" type="button" disabled={!isShared} onClick={isShared ? onOpenDetail : undefined}>{isShared ? 'View sample' : 'Read-only sample'}</button>{manageable && <button className="workspace-secondary" type="button" onClick={onReschedule}>Preview reschedule</button>}{manageable && <button className="workspace-secondary" type="button" onClick={onCancel}>Preview cancellation</button>}</div>
         </article>
       }) : <article className="panel empty-state"><CalendarDays size={24} /><h2>No {activeTab} appointments</h2><p>The shared demo booking will move here when its status changes.</p></article>}
-      <div className="info-note"><ShieldCheck size={18} /><p><strong>Manage securely without an app.</strong> Client access uses a secure email link. Cancellation and rescheduling options follow the policy accepted at booking.</p></div>
+      <div className="info-note"><ShieldCheck size={18} /><p><strong>Real appointments remain in Treatwell.</strong>Use the Treatwell confirmation or management route to change a current appointment. The controls above demonstrate the proposed Earth Glory experience and do not update Treatwell.</p></div>
     </>
   )
 }
@@ -516,14 +520,14 @@ function ClientPayments({ appointment, onOpenDetail }) {
   const due = outstandingAmount(appointment)
   return (
     <>
-      <PageHeading eyebrow="Client portal" title="Payments & receipts" subtitle="See charges and documents linked to your own appointments." />
+      <PageHeading eyebrow="Client portal" title="Sample payments & receipts" subtitle="Preview charges and documents linked to the shared demo appointment." />
       <section className="stats-grid three">
-        <StatCard label="Collected now" value={formatMoney(appointment.paidAmount)} detail={refunded ? `${formatMoney(refunded)} refunded · ${appointment.paymentMethod || 'sample payment'}` : appointment.paymentMethod || 'No payment recorded'} Icon={CheckCircle2} />
-        <StatCard label="Upcoming balance" value={formatMoney(due)} detail={cancelled ? 'Cancelled booking' : due ? 'Due at the venue' : 'Paid in full'} Icon={PoundSterling} tone="sand" />
-        <StatCard label="Refunds" value={formatMoney(refunded)} detail={refunded ? 'Simulated cancellation refund' : 'No refunds recorded'} Icon={CreditCard} />
+        <StatCard label="Sample collected" value={formatMoney(appointment.paidAmount)} detail={refunded ? `${formatMoney(refunded)} demo refund · ${appointment.paymentMethod || 'sample payment'}` : appointment.paymentMethod || 'No sample payment recorded'} Icon={CheckCircle2} />
+        <StatCard label="Sample balance" value={formatMoney(due)} detail={cancelled ? 'Demo cancelled' : due ? 'Proposed as due at venue' : 'Marked paid in demo'} Icon={PoundSterling} tone="sand" />
+        <StatCard label="Sample refunds" value={formatMoney(refunded)} detail={refunded ? 'Simulated cancellation refund' : 'No sample refunds recorded'} Icon={CreditCard} />
       </section>
       <article className="panel record-table-panel">
-        <div className="panel-title"><div><span>Receipt history</span><small>Documents appear after payment is recorded</small></div></div>
+        <div className="panel-title"><div><span>Sample receipt history</span><small>Prototype documents appear after a demo payment is recorded</small></div></div>
         <div className="record-table"><div className="record-head"><span>Date</span><span>Treatment</span><span>Status</span><span>Amount</span><span /></div><div className="record-row"><span>{formatAppointmentDate(appointment, { day: 'numeric', month: 'short' })}</span><span>{appointment.service.name}</span><Status tone={cancelled ? 'rose' : due ? 'sand' : 'green'}>{cancelled ? 'Cancelled' : due ? 'Balance due' : 'Paid'}</Status><strong>{refunded ? `−${formatMoney(refunded)}` : formatMoney(appointment.paidAmount)}</strong><button type="button" aria-label="View payment details" onClick={onOpenDetail}><FileText size={17} /></button></div></div>
       </article>
     </>
@@ -551,10 +555,10 @@ function ClientProfile({ appointment, onUpdateClient }) {
   }
   return (
     <>
-      <PageHeading eyebrow="Client portal" title="Your details" subtitle="Keep your contact information and communication choices current." actions={<button className="workspace-primary" type="button" disabled={!valid || saved} onClick={save}>{saved ? 'Saved in session' : 'Save changes'}</button>} />
+      <PageHeading eyebrow="Client portal" title="Your details · prototype" subtitle="Try how a client could manage contact information and communication choices." actions={<button className="workspace-primary" type="button" disabled={!valid || saved} onClick={save}>{saved ? 'Saved in session' : 'Save sample changes'}</button>} />
       <section className="form-layout">
-        <article className="panel form-panel"><div className="panel-title"><div><span>Contact details</span><small>Used for appointment messages</small></div></div><div className="mock-form"><label><span>Full name</span><input value={details.name} onChange={(event) => updateField('name', event.target.value)} /></label><label><span>Email</span><input type="email" value={details.email} onChange={(event) => updateField('email', event.target.value)} /></label><label><span>Mobile</span><input value={details.phone} onChange={(event) => updateField('phone', event.target.value)} /></label></div></article>
-        <article className="panel preferences-panel"><div className="panel-title"><div><span>Communication</span><small>Transactional and marketing choices stay separate</small></div></div><label><span><strong>Appointment email</strong><small>Confirmations, changes and receipts</small></span><input type="checkbox" defaultChecked /></label><label><span><strong>SMS reminders</strong><small>A short reminder before the visit</small></span><input type="checkbox" defaultChecked /></label><label><span><strong>Offers and updates</strong><small>Optional marketing from Earth Glory</small></span><input type="checkbox" /></label></article>
+        <article className="panel form-panel"><div className="panel-title"><div><span>Sample contact details</span><small>Not sent to Treatwell or used for real messages</small></div></div><div className="mock-form"><label><span>Full name</span><input value={details.name} onChange={(event) => updateField('name', event.target.value)} /></label><label><span>Email</span><input type="email" value={details.email} onChange={(event) => updateField('email', event.target.value)} /></label><label><span>Mobile</span><input value={details.phone} onChange={(event) => updateField('phone', event.target.value)} /></label></div></article>
+        <article className="panel preferences-panel"><div className="panel-title"><div><span>Communication preview</span><small>Transactional and marketing choices stay separate</small></div></div><label><span><strong>Appointment email</strong><small>Proposed confirmations, changes and receipts</small></span><input type="checkbox" defaultChecked /></label><label><span><strong>SMS reminders</strong><small>Proposed reminder before the visit</small></span><input type="checkbox" defaultChecked /></label><label><span><strong>Offers and updates</strong><small>Optional marketing choice in the prototype</small></span><input type="checkbox" /></label></article>
       </section>
     </>
   )
@@ -566,7 +570,7 @@ function PractitionerView({ activePage, appointment, appointments, blocks, onSta
   if (activePage === 'time-off') return <PractitionerTimeOff />
 
   const nextStatus = { confirmed: 'arrived', arrived: 'in_service', in_service: 'completed' }[appointment.status]
-  const actionLabel = { confirmed: 'Mark arrived', arrived: 'Start treatment', in_service: 'Complete appointment', completed: 'Appointment completed', no_show: 'Marked no-show', cancelled_client: 'Client cancelled' }[appointment.status] ?? 'No action available'
+  const actionLabel = { confirmed: 'Demo: mark arrived', arrived: 'Demo: start treatment', in_service: 'Demo: complete appointment', completed: 'Demo appointment completed', no_show: 'Demo marked no-show', cancelled_client: 'Demo client cancelled' }[appointment.status] ?? 'No demo action available'
   const dateAppointments = appointments.filter((item) => item.dateKey === appointment.dateKey && !item.status.startsWith('cancelled')).sort((a, b) => parseClockTime(a.startTime) - parseClockTime(b.startTime))
   const completedCount = dateAppointments.filter((item) => item.status === 'completed').length
   const noShowCount = dateAppointments.filter((item) => item.status === 'no_show').length
@@ -576,7 +580,7 @@ function PractitionerView({ activePage, appointment, appointments, blocks, onSta
 
   return (
     <>
-      <PageHeading eyebrow={formatAppointmentDate(appointment, { weekday: 'long', day: 'numeric', month: 'long' })} title="Good morning, Avni" subtitle="Your own schedule, clients and service tasks—without owner-only settings." actions={<button className="workspace-primary" type="button" onClick={() => onStartBooking(appointment.service)}><Plus size={17} /> Add walk-in</button>} />
+      <PageHeading eyebrow={formatAppointmentDate(appointment, { weekday: 'long', day: 'numeric', month: 'long' })} title="Good morning, Avni" subtitle="Preview your own schedule, clients and service tasks—without owner-only settings." actions={<button className="workspace-primary" type="button" title="This adds sample data only. Create real walk-ins in Treatwell during the transition." onClick={() => onStartBooking(appointment.service)}><Plus size={17} /> Add demo walk-in</button>} />
       <FlowStrip active={appointment.status === 'completed' ? 3 : 2} />
       <section className="stats-grid four">
         <StatCard label="Appointments" value={String(dateAppointments.length)} detail={`${remainingCount} active · ${completedCount} completed · ${noShowCount} no-show`} Icon={CalendarDays} />
@@ -598,7 +602,7 @@ function PractitionerView({ activePage, appointment, appointments, blocks, onSta
           <dl><div><dt>Treatment</dt><dd>{appointment.service.name}</dd></div><div><dt>Time</dt><dd>{formatClockTime(appointment.startTime)}–{formatClockTime(endTimeForAppointment({ startTime: appointment.startTime, duration: appointment.service.duration }))}</dd></div><div><dt>Calendar block</dt><dd>{appointment.service.duration + appointment.service.bufferAfter} minutes</dd></div><div><dt>Intake</dt><dd><CheckCircle2 size={14} /> Sample complete</dd></div><div><dt>Balance</dt><dd>{paymentStatus(appointment)}</dd></div></dl>
           <div className="prep-note"><NotebookPen size={18} /><p><strong>Operational note</strong>{appointment.serviceNote || 'No service note yet.'}</p></div>
           <button className="workspace-primary full" type="button" disabled={!nextStatus} onClick={() => nextStatus && onStatusChange(nextStatus, `${statusLabel(nextStatus)} by practitioner`)}>{actionLabel}{nextStatus && <ArrowRight size={16} />}</button>
-          <div className="secondary-action-row"><button type="button" onClick={onAddNote}>Add service note</button><button type="button" disabled={!['confirmed', 'arrived'].includes(appointment.status)} onClick={() => window.confirm('Mark this sample appointment as a no-show?') && onStatusChange('no_show', 'Marked no-show by practitioner')}>Mark no-show</button></div>
+          <div className="secondary-action-row"><button type="button" onClick={onAddNote}>Add sample note</button><button type="button" disabled={!['confirmed', 'arrived'].includes(appointment.status)} onClick={() => window.confirm('Mark this sample appointment as a no-show? Treatwell will not be changed.') && onStatusChange('no_show', 'Marked no-show in practitioner demo')}>Demo no-show</button></div>
         </article>
       </section>
     </>
@@ -607,7 +611,7 @@ function PractitionerView({ activePage, appointment, appointments, blocks, onSta
 
 function PractitionerCalendar({ appointment, appointments, blocks, onStartBooking, onOpenDetail }) {
   return (
-    <><PageHeading eyebrow="Practitioner workspace" title="My calendar" subtitle="Only your assigned appointments, shifts, breaks and time off." actions={<button className="workspace-primary" type="button" onClick={() => onStartBooking(appointment.service)}><Plus size={17} /> Add walk-in</button>} /><WeekCalendar personal appointment={appointment} appointments={appointments} blocks={blocks} onOpenDetail={onOpenDetail} /></>
+    <><PageHeading eyebrow="Practitioner workspace" title="My calendar" subtitle="Preview assigned appointments, shifts, breaks and time off." actions={<button className="workspace-primary" type="button" title="This adds sample data only. Create real walk-ins in Treatwell during the transition." onClick={() => onStartBooking(appointment.service)}><Plus size={17} /> Add demo walk-in</button>} /><WeekCalendar personal appointment={appointment} appointments={appointments} blocks={blocks} onOpenDetail={onOpenDetail} /></>
   )
 }
 
@@ -631,6 +635,7 @@ function OwnerView({ activePage, appointment, appointments, blocks, services, op
   if (activePage === 'team') return <OwnerTeam />
   if (activePage === 'payments') return <OwnerPayments appointment={appointment} appointments={appointments} onOpenDetail={onOpenDetail} />
   if (activePage === 'reports') return <OwnerReports appointments={appointments} />
+  if (activePage === 'booking-connection') return <OwnerBookingConnection />
   if (activePage === 'settings') return <OwnerSettings appointment={appointment} appointments={appointments} blocks={blocks} operatingHours={operatingHours} practitionerHours={practitionerHours} bookingRules={bookingRules} onUpdateHours={onUpdateHours} showNotice={showNotice} />
 
   const dayAppointments = appointments.filter((item) => item.dateKey === appointment.dateKey && !item.status.startsWith('cancelled')).sort((a, b) => parseClockTime(a.startTime) - parseClockTime(b.startTime))
@@ -643,7 +648,7 @@ function OwnerView({ activePage, appointment, appointments, blocks, services, op
 
   return (
     <>
-      <PageHeading eyebrow={formatAppointmentDate(appointment, { weekday: 'long', day: 'numeric', month: 'long' })} title="Earth Glory overview" subtitle="One connected sample day across booking, delivery and payment." actions={<><button className="workspace-secondary" type="button" onClick={onAddBlock}>Block time</button><button className="workspace-primary" type="button" onClick={() => onStartBooking(appointment.service)}><Plus size={17} /> Create appointment</button></>} />
+      <PageHeading eyebrow={formatAppointmentDate(appointment, { weekday: 'long', day: 'numeric', month: 'long' })} title="Earth Glory overview" subtitle="One connected sample day across booking, delivery and payment." actions={<><button className="workspace-secondary" type="button" title="This blocks sample availability only. Block real time in Treatwell." onClick={onAddBlock}>Try demo block</button><button className="workspace-primary" type="button" title="This creates sample data only. Create real appointments in Treatwell." onClick={() => onStartBooking(appointment.service)}><Plus size={17} /> Create demo appointment</button></>} />
       <FlowStrip active={appointment.status === 'completed' ? 3 : 2} />
       <section className="stats-grid four">
         <StatCard label="Appointments" value={String(dayAppointments.length)} detail={`${active} active · ${completed} completed · ${noShows} no-show`} Icon={CalendarDays} />
@@ -657,8 +662,9 @@ function OwnerView({ activePage, appointment, appointments, blocks, services, op
           <div className="owner-timeline">{dayAppointments.map((item) => <OwnerTimeline key={item.id} appointment={item} active={item.id === appointment.id} onOpen={item.id === appointment.id ? onOpenDetail : undefined} />)}</div>
         </article>
         <article className="panel attention-panel">
-          <div className="panel-title"><div><span>Configuration</span><small>3 prototype areas to review</small></div></div>
+          <div className="panel-title"><div><span>Configuration</span><small>4 prototype areas to review</small></div></div>
           <button type="button" onClick={() => onNavigate('settings')}><span className="attention-icon rose"><CreditCard size={18} /></span><span><strong>Payment mode</strong><small>Pay at venue is the active sample rule</small></span><ChevronRight size={17} /></button>
+          <button type="button" onClick={() => onNavigate('booking-connection')}><span className="attention-icon green"><RefreshCw size={18} /></span><span><strong>Treatwell transition</strong><small>Live booking link configured · direct calendar sync not connected</small></span><ChevronRight size={17} /></button>
           <button type="button" onClick={() => onNavigate('settings')}><span className="attention-icon sand"><FileText size={18} /></span><span><strong>Opening and cancellation rules</strong><small>Review calculated availability inputs</small></span><ChevronRight size={17} /></button>
           <button type="button" onClick={() => onNavigate('treatments')}><span className="attention-icon green"><CheckCircle2 size={18} /></span><span><strong>Service timing</strong><small>{services.filter((service) => service.status === 'published').length} published treatments include duration and reset time</small></span><ChevronRight size={17} /></button>
         </article>
@@ -696,13 +702,13 @@ function WeekCalendar({ personal = false, appointment, appointments, blocks, onO
 }
 
 function OwnerCalendar({ appointment, appointments, blocks, onAddBlock, onStartBooking, onOpenDetail }) {
-  return <><PageHeading eyebrow="Owner workspace" title="Calendar" subtitle="See appointments, service buffers, breaks and blocked time." actions={<><button className="workspace-secondary" type="button" onClick={onAddBlock}>Block time</button><button className="workspace-primary" type="button" onClick={() => onStartBooking(appointment.service)}><Plus size={17} /> Create appointment</button></>} /><WeekCalendar appointment={appointment} appointments={appointments} blocks={blocks} onOpenDetail={onOpenDetail} /></>
+  return <><PageHeading eyebrow="Owner workspace" title="Calendar" subtitle="Preview appointments, service buffers, breaks and blocked time." actions={<><button className="workspace-secondary" type="button" title="This blocks sample availability only. Block real time in Treatwell." onClick={onAddBlock}>Try demo block</button><button className="workspace-primary" type="button" title="This creates sample data only. Create real appointments in Treatwell." onClick={() => onStartBooking(appointment.service)}><Plus size={17} /> Create demo appointment</button></>} /><WeekCalendar appointment={appointment} appointments={appointments} blocks={blocks} onOpenDetail={onOpenDetail} /></>
 }
 
 function OwnerAppointments({ appointment, appointments, onStartBooking, onOpenDetail }) {
   const visible = appointments.filter((item) => item.dateKey === appointment.dateKey).sort((a, b) => parseClockTime(a.startTime) - parseClockTime(b.startTime))
   const value = visible.filter((item) => !item.status.startsWith('cancelled')).reduce((sum, item) => sum + item.service.price, 0)
-  return <><PageHeading eyebrow="Owner workspace" title="Appointments" subtitle="Manage bookings, walk-ins, changes and appointment status." actions={<button className="workspace-primary" type="button" onClick={() => onStartBooking(appointment.service)}><Plus size={17} /> New appointment</button>} /><article className="panel record-table-panel"><div className="panel-title"><div><span>Bookings for {formatAppointmentDate(appointment)}</span><small>{visible.length} appointments · {formatMoney(value)} booked</small></div><button type="button" disabled><Search size={16} /> Search preview</button></div><div className="record-table five"><div className="record-head"><span>Time</span><span>Client</span><span>Treatment</span><span>Status</span><span>Value</span></div>{visible.map((item) => <AppointmentRow key={item.id} appointment={item} onClick={item.id === appointment.id ? onOpenDetail : undefined} />)}</div></article></>
+  return <><PageHeading eyebrow="Owner workspace" title="Appointments" subtitle="Preview bookings, walk-ins, changes and appointment status." actions={<button className="workspace-primary" type="button" title="This creates sample data only. Create real appointments in Treatwell." onClick={() => onStartBooking(appointment.service)}><Plus size={17} /> New demo appointment</button>} /><article className="panel record-table-panel"><div className="panel-title"><div><span>Sample bookings for {formatAppointmentDate(appointment)}</span><small>{visible.length} appointments · {formatMoney(value)} booked</small></div><button type="button" disabled><Search size={16} /> Search preview</button></div><div className="record-table five"><div className="record-head"><span>Time</span><span>Client</span><span>Treatment</span><span>Status</span><span>Value</span></div>{visible.map((item) => <AppointmentRow key={item.id} appointment={item} onClick={item.id === appointment.id ? onOpenDetail : undefined} />)}</div></article></>
 }
 
 function OwnerClients({ appointment, appointments, onOpenDetail }) {
@@ -713,7 +719,53 @@ function OwnerClients({ appointment, appointments, onOpenDetail }) {
 function OwnerTreatments({ services, onAddTreatment, onEditTreatment, highlightedTreatmentId }) {
   const publishedCount = services.filter((service) => service.status === 'published').length
   const draftCount = services.length - publishedCount
-  return <><PageHeading eyebrow="Owner workspace" title="Treatments" subtitle="Manage what clients can book and the calendar time each treatment protects." actions={<button className="workspace-primary" type="button" onClick={onAddTreatment}><Plus size={17} /> Add treatment</button>} /><section className="treatment-catalog-summary" aria-label="Treatment catalogue summary"><span><strong>{publishedCount}</strong> published</span><span><strong>{draftCount}</strong> {draftCount === 1 ? 'draft' : 'drafts'}</span><span><strong>{services.length}</strong> total</span></section><div className="info-note timing-note"><Clock3 size={18} /><p><strong>Availability uses total calendar time.</strong>A 60-minute massage with a 10-minute reset blocks 70 minutes, so it cannot be booked at 17:00 if another appointment begins at 17:45.</p></div><article className="panel service-admin-grid">{services.map((service) => <ServiceAdmin key={service.id} service={service} status={service.status === 'published' ? 'Published' : 'Draft'} highlighted={service.id === highlightedTreatmentId} onEdit={() => onEditTreatment(service)} />)}</article></>
+  return <><PageHeading eyebrow="Owner workspace" title="Treatments" subtitle="Manage what this website prototype displays and the sample calendar time each treatment protects." actions={<button className="workspace-primary" type="button" onClick={onAddTreatment}><Plus size={17} /> Add treatment</button>} /><section className="treatment-catalog-summary" aria-label="Treatment catalogue summary"><span><strong>{publishedCount}</strong> published here</span><span><strong>{draftCount}</strong> {draftCount === 1 ? 'draft' : 'drafts'}</span><span><strong>{services.length}</strong> total</span></section><div className="info-note treatment-provider-note"><RefreshCw size={18} /><p><strong>Treatwell catalogue remains separate.</strong>Adding or editing a treatment here changes this browser session only. Update the live service, price and duration in Treatwell until a supported catalogue integration exists.</p></div><div className="info-note timing-note"><Clock3 size={18} /><p><strong>Availability uses total calendar time.</strong>A 60-minute massage with a 10-minute reset blocks 70 minutes, so it cannot be booked at 17:00 if another appointment begins at 17:45.</p></div><article className="panel service-admin-grid">{services.map((service) => <ServiceAdmin key={service.id} service={service} status={service.status === 'published' ? 'Published' : 'Draft'} highlighted={service.id === highlightedTreatmentId} onEdit={() => onEditTreatment(service)} />)}</article></>
+}
+
+function OwnerBookingConnection() {
+  return (
+    <>
+      <PageHeading
+        eyebrow="Owner workspace"
+        title="Booking connection"
+        subtitle="Keep one live calendar while Earth Glory tests its future booking experience."
+        actions={<a className="workspace-primary workspace-link-button" href={LIVE_BOOKING_PROVIDER.bookingUrl} target="_blank" rel="noopener noreferrer">Open live booking <ExternalLink size={16} /></a>}
+      />
+      <section className="booking-connection-grid">
+        <article className="panel booking-provider-card">
+          <div className="booking-provider-heading">
+            <span className="booking-provider-icon"><CalendarDays size={23} /></span>
+            <div><small>Current booking provider</small><h2>{LIVE_BOOKING_PROVIDER.name}</h2><p>{LIVE_BOOKING_PROVIDER.accountStatus}</p></div>
+            <Status>Configured</Status>
+          </div>
+          <p className="booking-provider-summary">Treatwell remains the source of truth for real availability and appointments. The Earth Glory website sends live clients to the official booking flow instead of creating a second live calendar.</p>
+          <p className="connection-monitoring-note">Configuration status only. This static prototype does not monitor the Treatwell listing or account health.</p>
+          <dl className="connection-status-list">
+            <div><dt>Live booking link</dt><dd><Status>Configured</Status></dd></div>
+            <div><dt>Appointment import</dt><dd><Status tone="sand">Not connected</Status></dd></div>
+            <div><dt>Earth Glory write-back</dt><dd><Status tone="sand">Not connected</Status></dd></div>
+            <div><dt>Last synchronization</dt><dd>No sync configured</dd></div>
+          </dl>
+        </article>
+
+        <article className="panel connection-flow-card">
+          <div className="panel-title"><div><span>Safe transition flow</span><small>One authoritative calendar prevents an unsynchronised second diary</small></div></div>
+          <div className="connection-flow" aria-label="Current live booking flow">
+            <div><i>1</i><span><strong>Client starts booking</strong><small>Earth Glory website or directly on Treatwell</small></span></div>
+            <ArrowRight size={18} aria-hidden="true" />
+            <div><i>2</i><span><strong>Treatwell confirms</strong><small>Uses its live availability and service catalogue</small></span></div>
+            <ArrowRight size={18} aria-hidden="true" />
+            <div><i>3</i><span><strong>Time is protected</strong><small>The appointment appears in the Treatwell calendar</small></span></div>
+          </div>
+          <div className="connection-checkpoint">
+            <RefreshCw size={19} />
+            <p><strong>Direct two-way sync is the next checkpoint.</strong>Before this dashboard can show or change real bookings, Treatwell must approve access for availability, appointments, rescheduling, cancellation and real-time updates.</p>
+          </div>
+        </article>
+      </section>
+      <div className="info-note connection-boundary-note"><ShieldCheck size={18} /><p><strong>Operational rule during transition.</strong>Create phone bookings, walk-ins, breaks and time off in Treatwell. Owner and Practitioner calendars in this prototype contain sample data and must not be used as the live diary.</p></div>
+    </>
+  )
 }
 
 function OwnerTeam() {
@@ -760,7 +812,7 @@ function OwnerSettings({ appointment, appointments, blocks, operatingHours, prac
     onUpdateHours(payload)
   }
 
-  return <><PageHeading eyebrow="Owner workspace" title="Settings" subtitle="Opening-hour changes apply immediately to Guest availability in this browser session." /><section className="settings-grid"><article className="panel hours-card"><div className="panel-title"><div><span>Earth Glory operating hours</span><small>Sample owner-controlled opening window</small></div><Status>Auto-applied</Status></div><div className="hours-list">{dayNames.map((day, index) => { const window = operatingHours[index]?.[0]; return <div className="hours-row" key={day}><strong>{day}</strong><label><input type="checkbox" checked={Boolean(window)} onChange={(event) => applyHours({ day: index, closed: !event.target.checked, start: window?.start ?? '10:00', end: window?.end ?? '17:00' })} /><span>{window ? 'Open' : 'Closed'}</span></label><input aria-label={`${day} opening time`} type="time" value={window?.start ?? '10:00'} disabled={!window} onChange={(event) => applyHours({ day: index, closed: false, start: event.target.value, end: window.end })} /><span>to</span><input aria-label={`${day} closing time`} type="time" value={window?.end ?? '17:00'} disabled={!window} onChange={(event) => applyHours({ day: index, closed: false, start: window.start, end: event.target.value })} /></div> })}</div></article><article className="panel rules-card"><div className="panel-title"><div><span>Calculated booking rules</span><small>Applied immediately in the prototype</small></div><Status>Configured</Status></div><dl><div><dt>Slot interval</dt><dd>{bookingRules.slotIntervalMinutes} minutes</dd></div><div><dt>Practitioner hours</dt><dd>Intersected with business hours</dd></div><div><dt>Service occupancy</dt><dd>Treatment + reset buffer</dd></div><div><dt>Conflicts</dt><dd>Appointments, breaks and blocks</dd></div><div><dt>{appointment.service.name}</dt><dd>{appointment.service.duration} + {appointment.service.bufferAfter} minutes</dd></div><div><dt>Available starts on {formatAppointmentDate(appointment)}</dt><dd>{availability.slots.filter((slot) => slot.available).length}</dd></div></dl>{!appointmentWithinHours && <div className="dialog-warning"><Ban size={18} /><p><strong>Existing booking is now outside these hours.</strong>Changing hours does not cancel it; reschedule or review it separately.</p></div>}<div className="availability-example"><Clock3 size={18} /><p><strong>Late-booking protection is active.</strong>A candidate is unavailable when its treatment or reset buffer overlaps a later appointment, even when the proposed start itself looks free.</p></div></article></section></>
+  return <><PageHeading eyebrow="Owner workspace" title="Settings" subtitle="Sample opening-hour changes affect this prototype only; manage current live hours in Treatwell." /><section className="settings-grid"><article className="panel hours-card"><div className="panel-title"><div><span>Earth Glory sample hours</span><small>Owner-controlled prototype opening window</small></div><Status>Applied to demo</Status></div><div className="hours-list">{dayNames.map((day, index) => { const window = operatingHours[index]?.[0]; return <div className="hours-row" key={day}><strong>{day}</strong><label><input type="checkbox" checked={Boolean(window)} onChange={(event) => applyHours({ day: index, closed: !event.target.checked, start: window?.start ?? '10:00', end: window?.end ?? '17:00' })} /><span>{window ? 'Open' : 'Closed'}</span></label><input aria-label={`${day} opening time`} type="time" value={window?.start ?? '10:00'} disabled={!window} onChange={(event) => applyHours({ day: index, closed: false, start: event.target.value, end: window.end })} /><span>to</span><input aria-label={`${day} closing time`} type="time" value={window?.end ?? '17:00'} disabled={!window} onChange={(event) => applyHours({ day: index, closed: false, start: window.start, end: event.target.value })} /></div> })}</div></article><article className="panel rules-card"><div className="panel-title"><div><span>Calculated demo rules</span><small>Applied immediately to sample availability</small></div><Status>Demo configured</Status></div><dl><div><dt>Slot interval</dt><dd>{bookingRules.slotIntervalMinutes} minutes</dd></div><div><dt>Practitioner hours</dt><dd>Intersected with business hours</dd></div><div><dt>Service occupancy</dt><dd>Treatment + reset buffer</dd></div><div><dt>Conflicts</dt><dd>Appointments, breaks and blocks</dd></div><div><dt>{appointment.service.name}</dt><dd>{appointment.service.duration} + {appointment.service.bufferAfter} minutes</dd></div><div><dt>Sample starts on {formatAppointmentDate(appointment)}</dt><dd>{availability.slots.filter((slot) => slot.available).length}</dd></div></dl>{!appointmentWithinHours && <div className="dialog-warning"><Ban size={18} /><p><strong>Sample booking is now outside these hours.</strong>Changing demo hours does not cancel it; reschedule or review it separately.</p></div>}<div className="availability-example"><Clock3 size={18} /><p><strong>Prototype late-booking protection is active.</strong>A sample candidate is unavailable when its treatment or reset buffer overlaps a later sample appointment.</p></div></article></section></>
 }
 
 function OwnerTimeline({ appointment, active, onOpen }) {
@@ -849,9 +901,9 @@ function AddTreatmentDialog({ treatment, services, onClose, onSave }) {
   return (
     <PrototypeDialog
       title={editing ? 'Edit treatment' : 'Add treatment'}
-      description={editing ? 'Update the client-facing details, timing and visibility for this treatment.' : 'Set what clients see and how much calendar time Earth Glory protects. Save a draft or publish it to Guest booking.'}
+      description={editing ? 'Update the client-facing prototype details, timing and visibility. Treatwell will not be changed.' : 'Set what this website prototype shows and how much sample calendar time the treatment protects. Treatwell will not be changed.'}
       onClose={requestClose}
-      footer={<><button className="workspace-secondary" type="button" onClick={requestClose}>Cancel</button><button className="workspace-secondary" type="button" disabled={lastPublishedTreatment} title={lastPublishedTreatment ? 'Keep at least one treatment published for Guest booking.' : undefined} onClick={() => submit('draft')}>{editing && treatment.status === 'published' ? 'Move to draft' : 'Save draft'}</button><button className="workspace-primary" type="submit" form="add-treatment-form">{editing ? (treatment.status === 'published' ? 'Publish changes' : 'Publish treatment') : 'Publish treatment'}</button></>}
+      footer={<><button className="workspace-secondary" type="button" onClick={requestClose}>Cancel</button><button className="workspace-secondary" type="button" disabled={lastPublishedTreatment} title={lastPublishedTreatment ? 'Keep at least one treatment visible in the website prototype.' : undefined} onClick={() => submit('draft')}>{editing && treatment.status === 'published' ? 'Move to draft' : 'Save draft'}</button><button className="workspace-primary" type="submit" form="add-treatment-form">{editing ? (treatment.status === 'published' ? 'Publish prototype changes' : 'Publish in prototype') : 'Publish in prototype'}</button></>}
     >
       <p className="dialog-required-note" id="treatment-required-note"><span aria-hidden="true">*</span> Required to publish. A treatment name is enough to save a draft.</p>
       <form ref={formRef} id="add-treatment-form" className="dialog-form-grid" aria-describedby="treatment-required-note" noValidate onSubmit={(event) => { event.preventDefault(); submit('publish') }}>
@@ -895,7 +947,7 @@ function AddTreatmentDialog({ treatment, services, onClose, onSave }) {
         <div><PoundSterling size={18} /><span><small>Client pays</small><strong>{Number(values.price) > 0 ? formatMoney(values.price) : 'Set a price'}</strong></span></div>
         <div><UserCheck size={18} /><span><small>Practitioner</small><strong>Avni · automatically assigned</strong></span></div>
       </div>
-      {lastPublishedTreatment && <div className="info-note treatment-publish-guard"><ShieldCheck size={18} /><p><strong>Keep one treatment published.</strong>Publish another treatment before moving this final option to Draft, so Guest booking never becomes an unexplained dead end.</p></div>}
+      {lastPublishedTreatment && <div className="info-note treatment-publish-guard"><ShieldCheck size={18} /><p><strong>Keep one prototype treatment published.</strong>Publish another before moving this final option to Draft, so the sample booking flow never becomes an unexplained dead end.</p></div>}
       <p className="dialog-session-note"><ShieldCheck size={17} /><span>This prototype saves the treatment only for this browser session. Reset demo or refresh restores the original catalogue.</span></p>
     </PrototypeDialog>
   )
@@ -957,16 +1009,16 @@ function AppointmentDetailDialog({ role, appointment, confirmCancel, onClose, on
     return <PrototypeDialog title="Cancel this demo appointment?" description="The record will remain visible, but every role will show it as cancelled." onClose={onClose} footer={<><button className="workspace-secondary" type="button" onClick={onClose}>Keep appointment</button><button className="workspace-danger" type="button" onClick={onCancel}>Cancel demo appointment</button></>}><div className="dialog-warning"><Ban size={21} /><p><strong>Sample cancellation outcome.</strong>{cancellationMessage} Live handling will use the policy accepted when the appointment was booked.</p></div><AppointmentSummary appointment={appointment} /></PrototypeDialog>
   }
 
-  return <PrototypeDialog title={`${appointment.service.name} appointment`} description={`${appointment.reference} · one session-only record shared across all views`} onClose={onClose} footer={<><button className="workspace-secondary" type="button" onClick={onClose}>Close</button>{role === 'client' && manageable && <button className="workspace-secondary" type="button" onClick={onReschedule}>Reschedule</button>}{role === 'client' && manageable && <button className="workspace-danger" type="button" onClick={onCancel}>Cancel</button>}{role === 'owner' && due > 0 && !cancelled && <button className="workspace-primary" type="button" onClick={onRecordPayment}>Record payment</button>}</>}><AppointmentSummary appointment={appointment} />{role !== 'client' && <section className="dialog-section"><div className="panel-title"><div><span>Service note</span><small>Visible to permitted staff and owner only</small></div></div><p>{appointment.serviceNote || 'No service note has been added.'}</p></section>}<section className="dialog-section"><div className="panel-title"><div><span>Activity</span><small>Newest sample event first</small></div></div><ol className="activity-list">{[...appointment.events].reverse().map((event) => <li key={event.id}><span /><div><strong>{event.label}</strong><small>{event.actor} · {event.at}</small></div></li>)}</ol></section></PrototypeDialog>
+  return <PrototypeDialog title={`${appointment.service.name} · sample appointment`} description={`${appointment.reference} · one session-only record shared across all prototype views · Treatwell unchanged`} onClose={onClose} footer={<><button className="workspace-secondary" type="button" onClick={onClose}>Close</button>{role === 'client' && manageable && <button className="workspace-secondary" type="button" onClick={onReschedule}>Preview reschedule</button>}{role === 'client' && manageable && <button className="workspace-danger" type="button" onClick={onCancel}>Preview cancellation</button>}{role === 'owner' && due > 0 && !cancelled && <button className="workspace-primary" type="button" onClick={onRecordPayment}>Record sample payment</button>}</>}><AppointmentSummary appointment={appointment} />{role !== 'client' && <section className="dialog-section"><div className="panel-title"><div><span>Sample service note</span><small>Visible in permitted prototype views only</small></div></div><p>{appointment.serviceNote || 'No sample service note has been added.'}</p></section>}<section className="dialog-section"><div className="panel-title"><div><span>Sample activity</span><small>Newest prototype event first</small></div></div><ol className="activity-list">{[...appointment.events].reverse().map((event) => <li key={event.id}><span /><div><strong>{event.label}</strong><small>{event.actor} · {event.at}</small></div></li>)}</ol></section></PrototypeDialog>
 }
 
 function AppointmentSummary({ appointment }) {
-  return <dl className="dialog-summary"><div><dt>Status</dt><dd><Status tone={statusTone(appointment.status)}>{statusLabel(appointment.status)}</Status></dd></div><div><dt>Client</dt><dd>{appointment.client.name}</dd></div><div><dt>Treatment</dt><dd>{appointment.service.name}</dd></div><div><dt>Date</dt><dd>{formatAppointmentDate(appointment, { weekday: 'long', day: 'numeric', month: 'long' })}</dd></div><div><dt>Treatment time</dt><dd>{formatClockTime(appointment.startTime)}–{formatClockTime(endTimeForAppointment({ startTime: appointment.startTime, duration: appointment.service.duration }))}</dd></div><div><dt>Protected calendar</dt><dd>{appointment.service.duration} min + {appointment.service.bufferAfter} min reset</dd></div><div><dt>Practitioner</dt><dd>{appointment.practitioner.name}</dd></div><div><dt>Payment</dt><dd>{paymentStatus(appointment)}</dd></div><div><dt>Venue</dt><dd>{venue}</dd></div></dl>
+  return <dl className="dialog-summary"><div><dt>Sample status</dt><dd><Status tone={statusTone(appointment.status)}>{statusLabel(appointment.status)}</Status></dd></div><div><dt>Sample client</dt><dd>{appointment.client.name}</dd></div><div><dt>Treatment</dt><dd>{appointment.service.name}</dd></div><div><dt>Date</dt><dd>{formatAppointmentDate(appointment, { weekday: 'long', day: 'numeric', month: 'long' })}</dd></div><div><dt>Treatment time</dt><dd>{formatClockTime(appointment.startTime)}–{formatClockTime(endTimeForAppointment({ startTime: appointment.startTime, duration: appointment.service.duration }))}</dd></div><div><dt>Protected demo calendar</dt><dd>{appointment.service.duration} min + {appointment.service.bufferAfter} min reset</dd></div><div><dt>Practitioner</dt><dd>{appointment.practitioner.name}</dd></div><div><dt>Sample payment</dt><dd>{paymentStatus(appointment)}</dd></div><div><dt>Venue</dt><dd>{venue}</dd></div></dl>
 }
 
 function ServiceNoteDialog({ appointment, onClose, onSave }) {
   const [note, setNote] = useState(appointment.serviceNote)
-  return <PrototypeDialog title="Add service note" description="This sample note is shared with the Owner view and never shown to the Client." onClose={onClose} footer={<><button className="workspace-secondary" type="button" onClick={onClose}>Cancel</button><button className="workspace-primary" type="button" onClick={() => onSave(note.trim())} disabled={!note.trim()}>Save note</button></>}><label className="dialog-field"><span>Operational note</span><textarea rows="6" value={note} onChange={(event) => setNote(event.target.value)} placeholder="Record pressure preference, products used or follow-up information" /></label></PrototypeDialog>
+  return <PrototypeDialog title="Add sample service note" description="This note is shared with the Owner prototype view, never shown to the Client and never sent to Treatwell." onClose={onClose} footer={<><button className="workspace-secondary" type="button" onClick={onClose}>Cancel</button><button className="workspace-primary" type="button" onClick={() => onSave(note.trim())} disabled={!note.trim()}>Save sample note</button></>}><label className="dialog-field"><span>Sample operational note</span><textarea rows="6" value={note} onChange={(event) => setNote(event.target.value)} placeholder="Record a sample pressure preference, product or follow-up note" /></label></PrototypeDialog>
 }
 
 function BlockTimeDialog({ appointment, appointments, blocks, onClose, onSave }) {
@@ -980,7 +1032,7 @@ function BlockTimeDialog({ appointment, appointments, blocks, onClose, onSave })
     ...blocks,
   ].find((event) => event.dateKey === dateKey && parseClockTime(start) < parseClockTime(event.end) && parseClockTime(end) > parseClockTime(event.start))
 
-  return <PrototypeDialog title="Block availability" description="The protected interval will immediately remove overlapping Guest start times." onClose={onClose} footer={<><button className="workspace-secondary" type="button" onClick={onClose}>Cancel</button><button className="workspace-primary" type="button" disabled={!candidateValid || Boolean(conflict) || !label.trim()} onClick={() => onSave({ dateKey, start, end, label: label.trim() })}>Add blocked time</button></>}><div className="dialog-form-grid"><label className="dialog-field full"><span>Date</span><input type="date" value={dateKey} onChange={(event) => setDateKey(event.target.value)} /></label><label className="dialog-field"><span>Start</span><input type="time" value={start} onChange={(event) => setStart(event.target.value)} /></label><label className="dialog-field"><span>End</span><input type="time" value={end} onChange={(event) => setEnd(event.target.value)} /></label><label className="dialog-field full"><span>Reason</span><input value={label} onChange={(event) => setLabel(event.target.value)} /></label></div>{conflict && <div className="dialog-warning"><Ban size={20} /><p><strong>This overlaps protected time.</strong>{conflict.label || 'Choose a time outside an appointment, break or existing block.'}</p></div>}</PrototypeDialog>
+  return <PrototypeDialog title="Block sample availability" description="This removes overlapping start times from the browser demo only. Treatwell is unchanged; block real time there." onClose={onClose} footer={<><button className="workspace-secondary" type="button" onClick={onClose}>Cancel</button><button className="workspace-primary" type="button" disabled={!candidateValid || Boolean(conflict) || !label.trim()} onClick={() => onSave({ dateKey, start, end, label: label.trim() })}>Add demo block</button></>}><div className="dialog-form-grid"><label className="dialog-field full"><span>Date</span><input type="date" value={dateKey} onChange={(event) => setDateKey(event.target.value)} /></label><label className="dialog-field"><span>Start</span><input type="time" value={start} onChange={(event) => setStart(event.target.value)} /></label><label className="dialog-field"><span>End</span><input type="time" value={end} onChange={(event) => setEnd(event.target.value)} /></label><label className="dialog-field full"><span>Reason</span><input value={label} onChange={(event) => setLabel(event.target.value)} /></label></div>{conflict && <div className="dialog-warning"><Ban size={20} /><p><strong>This overlaps protected sample time.</strong>{conflict.label || 'Choose a time outside a demo appointment, break or existing block.'}</p></div>}</PrototypeDialog>
 }
 
 function RecordPaymentDialog({ appointment, onClose, onSave }) {

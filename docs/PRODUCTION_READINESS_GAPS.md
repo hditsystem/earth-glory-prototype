@@ -19,10 +19,22 @@ This document preserves the capabilities required before the platform accepts re
 
 ### Booking source of truth and cutover
 
-- Decide whether Treatwell or another calendar is replaced, integrated or temporarily run in parallel.
+- **Recommended interim operating model, pending owner confirmation:** Treatwell remains Earth Glory's only authoritative live calendar while the new product is evaluated.
+- Route website clients through Earth Glory's configured official Treatwell-hosted booking page so bookings started on the website and directly on Treatwell use the same live calendar.
+- Keep phone bookings, walk-ins, breaks, time off and live appointment changes in Treatwell during the transition.
+- Treat the configured booking link and direct data synchronization as separate capabilities: the link is present but not monitored, while appointment import and write-back are not connected.
+- Confirm in writing whether Earth Glory's Treatwell account and agreement permit an approved booking API integration and custom booking interface.
+- Confirm supported capabilities for availability reads, conflict-checked appointment creation, rescheduling, cancellation, service/staff/location mapping, idempotency, webhooks, rate limits and a sandbox.
+- Do not use scraping, browser automation or unsupported reverse-engineered endpoints for calendar synchronization.
 - Import and reconcile future appointments and client records without duplicates.
-- Define a cutover date, rollback plan and daily reconciliation procedure.
+- If approved API access exists, keep Treatwell authoritative initially: confirm every Earth Glory write in Treatwell before showing the appointment as confirmed locally.
+- Store stable Treatwell IDs and use provider idempotency or client-reference fields where supported; always keep local deduplication keys.
+- Use signed webhooks where Treatwell supports them; otherwise use an approved incremental change feed or polling process. In every case, keep an idempotent local inbox/outbox and scheduled reconciliation.
+- Fail closed during provider/API outages: offer a request or waitlist instead of confirming an appointment only in Earth Glory.
+- Define a later cutover date, rollback plan and daily reconciliation procedure before Earth Glory can become authoritative.
 - Prevent independent calendars from selling the same staff/resource time.
+
+The public GitHub Pages build can safely open the configured HTTPS Treatwell booking page. It cannot securely store partner API credentials, receive webhooks or perform durable reconciliation; those capabilities require a backend.
 
 ### Production application foundation
 

@@ -1,12 +1,24 @@
 # Earth Glory booking prototype
 
-A polished, responsive, non-transactional front-end concept for Earth Glory.
+A polished, responsive front-end concept for Earth Glory with a clearly separated Treatwell live-booking route and non-transactional product previews.
+
+## Current Treatwell transition
+
+Earth Glory currently uses Treatwell as its live booking calendar. During this prototype transition, the operating rule is: **Treatwell remains the source of truth for every real booking until a supported direct integration or controlled cutover exists.**
+
+- Public **Book on Treatwell** actions open Earth Glory's official Treatwell booking flow.
+- Bookings started from this website and bookings made directly on Treatwell continue into the same Treatwell calendar.
+- The Guest, Client, Practitioner and Owner product flows use sample browser data only and never claim to be synchronized.
+- The Owner **Booking connection** page distinguishes a configured live-booking link from appointment import and write-back, which are not connected.
+- Real phone bookings, walk-ins, breaks, time off and appointment changes must continue to be entered in Treatwell during this transition.
+
+The default configured booking destination is contained in `src/bookingProvider.js`. A deployment can override its tracking query with `VITE_TREATWELL_BOOKING_URL`, but the application accepts only Earth Glory's HTTPS route on Treatwell's booking host. Do not put Treatwell API credentials in this static GitHub Pages application.
 
 ## What is included
 
 - Branded Earth Glory public site with hero, treatment menu, studio story, practitioner profile, reviews, visit details and FAQ
 - Category filtering for treatment discovery
-- Four-step guest booking flow:
+- Four-step feedback-only booking preview:
   1. treatment
   2. calculated London date and time
   3. sample contact details and prototype acknowledgement
@@ -14,22 +26,22 @@ A polished, responsive, non-transactional front-end concept for Earth Glory.
 - Calculated sample availability that intersects Earth Glory operating hours with practitioner hours, then protects each service's treatment duration and room-reset buffer against appointments, breaks, owner-blocked time and closing time
 - Late-booking overlap prevention: a start time is disabled when the treatment or reset period would run into a later appointment, even when the proposed start itself appears free
 - Clear treatment price and deliberately unconfirmed payment terms
-- Explicit non-transactional confirmation state showing the session record a live system would create
-- Responsive desktop/mobile layouts and persistent mobile booking action
+- Explicit preview-complete state stating that no appointment was booked and offering the real Treatwell route
+- Responsive desktop/mobile layouts and a persistent mobile link to the current Treatwell calendar
 - Keyboard-friendly controls, trapped and restored modal focus, reduced-motion support and semantic landmarks
 - Original generated hero artwork bundled through `src/assets`
 - Owner-supplied lotus identity refined into a transparent, web-optimised PNG and used consistently across public, booking and workspace surfaces
 - Four connected feedback views using one active session-only appointment, supporting schedule records and shared activity state:
-  1. Guest discovery and no-account booking
-  2. Client appointment detail, rescheduling, cancellation, payment summary and preferences
-  3. Practitioner schedule, client brief, appointment-status workflow and service note
-  4. Owner calendar, appointment detail, treatment management, blocked time, sample payment recording, reports and editable operating hours
-- Owner treatment catalogue with validated add/edit and Draft/Published controls; published treatments flow immediately into Guest discovery, booking choices and calculated availability
+  1. Guest discovery and no-account booking preview
+  2. Client sample appointment detail, rescheduling, cancellation, payment summary and preferences
+  3. Practitioner sample schedule, client brief, appointment-status workflow and service note
+  4. Owner sample calendar, appointment detail, treatment management, blocked time, payment recording, reports, editable operating hours and booking-connection status
+- Owner treatment catalogue with validated add/edit and Draft/Published controls; published treatments flow immediately into the website prototype and sample availability but do not change Treatwell
 - Cross-role updates for the shared appointment, including booking/rescheduling, cancellation, practitioner status, service note, owner-recorded payment and activity history
 - A **Reset demo** action that restores the original sample scenario
 - Shareable role previews through `?role=client`, `?role=practitioner` and `?role=owner`; the clean URL opens the Guest view
 
-Selected services, durations, reset buffers, prices, operating hours and profile details remain draft content until Avni approves them. Available starts are calculated from sample data in the browser; no real appointment, payment, email or SMS is created or sent. Connected demo records remain only for the current page session and reset on refresh or when **Reset demo** is selected.
+Selected services, durations, reset buffers, prices, operating hours and profile details remain draft content until Avni approves them. Available preview starts are calculated from sample data in the browser and are not Treatwell availability; no real appointment, payment, email or SMS is created or sent. Connected demo records remain only for the current page session and reset on refresh or when **Reset demo** is selected.
 
 The future marketplace concept source is retained in `src/MarketplacePreview.jsx` but is intentionally not linked or included in the public build during the Earth Glory feedback round.
 
@@ -65,7 +77,7 @@ npm run build
 
 ## Production boundary
 
-This is a public-site and product-flow prototype—not a validated production system. Production work still requires owner-approved content and policies, a confirmed launch jurisdiction and booking source of truth, a database with tenant isolation, server-side availability and slot holds, secure authentication and roles, approved connected-account payment architecture, signed webhooks, transactional notifications, invoice and refund documents, immutable financial records, reconciliation, support operations, audit logs, backup/restore testing, and provider/admin dashboards.
+This is a public-site and product-flow prototype—not a validated production system. Treatwell is the recommended interim booking source of truth pending final confirmation with Earth Glory, and appointment API/webhook access has not been confirmed. Production work still requires owner-approved content and policies, a confirmed launch jurisdiction, a database with tenant isolation, server-side availability and slot holds, secure authentication and roles, a supported Treatwell integration or controlled cutover, connected-account payment architecture, provider-supported signed webhooks or another approved change feed, transactional notifications, invoice and refund documents, immutable financial records, reconciliation, support operations, audit logs, backup/restore testing, and provider/admin dashboards.
 
 Do not treat any draft source material as owner approval. Verify the Earth Glory launch catalogue, venue instructions, opening hours, accessibility, cancellation terms and payment mode directly with Avni.
 

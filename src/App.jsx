@@ -20,6 +20,7 @@ import {
   X,
 } from 'lucide-react'
 import heroImage from './assets/earth-glory-hero.png'
+import { LIVE_BOOKING_PROVIDER } from './bookingProvider'
 import { RoleSwitcher, RoleWorkspace } from './RoleViews'
 import {
   blockedEndTimeForAppointment,
@@ -142,10 +143,10 @@ const practitioners = [
 ]
 
 const faqs = [
-  ['What is the cancellation policy?', 'Earth Glory is finalising its cancellation, rescheduling and late-cancellation terms. The complete policy will appear before a client confirms a live booking.'],
-  ['Will clients pay online?', 'The live booking journey will clearly show whether payment is due online or at the venue. No payment is taken in this prototype.'],
-  ['What should clients know before arrival?', 'Preparation, patch-test and arrival instructions will be shown for each relevant treatment and included in the booking confirmation.'],
-  ['Is step-free access available?', 'Accessibility and venue-access details are being confirmed and will be published before live booking opens.'],
+  ['What is the cancellation policy?', 'Treatwell shows the terms that apply to the current live appointment. The Earth Glory prototype uses sample wording only while the future experience is reviewed.'],
+  ['Will clients pay online?', 'The current Treatwell flow shows whether payment is due online or at the venue. No payment is taken in this prototype.'],
+  ['What should clients know before arrival?', 'Check the live Treatwell service and confirmation for current preparation, patch-test and arrival instructions.'],
+  ['Is step-free access available?', 'Accessibility and venue-access details still need direct confirmation from Earth Glory before they are published here.'],
 ]
 
 function formatMoney(value) {
@@ -262,7 +263,7 @@ function createInitialDemoState() {
 
   const appointment = {
     id: 'demo-appointment',
-    reference: 'EG-1048',
+    reference: 'EG-DEMO-1048',
     client: { name: 'Maya Thompson', email: 'maya@example.com', phone: '07700 900123' },
     service: serviceSnapshot(aromatherapy),
     practitioner: { id: 'avni', name: 'Avni' },
@@ -279,7 +280,7 @@ function createInitialDemoState() {
   const otherAppointments = [
     {
       id: 'sample-1047',
-      reference: 'EG-1047',
+      reference: 'EG-DEMO-1047',
       client: { name: 'Sophie Lewis' },
       service: serviceSnapshot(threading),
       practitioner: { id: 'avni', name: 'Avni' },
@@ -294,7 +295,7 @@ function createInitialDemoState() {
     },
     {
       id: 'sample-1049',
-      reference: 'EG-1049',
+      reference: 'EG-DEMO-1049',
       client: { name: 'Noah Patel' },
       service: serviceSnapshot(shellac),
       practitioner: { id: 'avni', name: 'Avni' },
@@ -309,7 +310,7 @@ function createInitialDemoState() {
     },
     {
       id: 'sample-1050',
-      reference: 'EG-1050',
+      reference: 'EG-DEMO-1050',
       client: { name: 'Amelia Jones' },
       service: serviceSnapshot(facial),
       practitioner: { id: 'avni', name: 'Avni' },
@@ -324,7 +325,7 @@ function createInitialDemoState() {
     },
     {
       id: 'sample-1051',
-      reference: 'EG-1051',
+      reference: 'EG-DEMO-1051',
       client: { name: 'Priya Shah' },
       service: serviceSnapshot(shellac),
       practitioner: { id: 'avni', name: 'Avni' },
@@ -602,7 +603,7 @@ function App() {
     <div className="app-shell">
       <div className="concept-bar">
         <span>Feedback prototype</span>
-        <p>Four connected user views · No live bookings or payments</p>
+        <p>Demo views only · Live bookings continue in Treatwell</p>
       </div>
 
       <RoleSwitcher activeRole={activeRole} onChange={switchRole} onReset={resetDemo} />
@@ -623,13 +624,12 @@ function App() {
           <a href="#studio" onClick={() => setMenuOpen(false)}>Our studio</a>
           <a href="#reviews" onClick={() => setMenuOpen(false)}>Kind words</a>
           <a href="#visit" onClick={() => setMenuOpen(false)}>Visit</a>
+          <a className="nav-live-booking" href={LIVE_BOOKING_PROVIDER.bookingUrl} target="_blank" rel="noopener noreferrer" onClick={() => setMenuOpen(false)}>Live booking ↗</a>
         </nav>
 
         <div className="header-actions">
-          <button className="text-button" type="button" onClick={() => switchRole('client')}>Client portal</button>
-          <button className="button button-dark hide-mobile" type="button" onClick={() => startBooking()}>
-            Try booking
-          </button>
+          <button className="text-button" type="button" onClick={() => switchRole('client')}>Client portal preview</button>
+          <a className="button button-dark hide-mobile" href={LIVE_BOOKING_PROVIDER.bookingUrl} target="_blank" rel="noopener noreferrer">Book on Treatwell</a>
           <button
             ref={menuButtonRef}
             className="menu-button"
@@ -655,10 +655,10 @@ function App() {
               Thoughtful massage, facial, nail and lash treatments from a qualified, experienced beauty therapist—created to help you feel relaxed, refreshed and cared for.
             </p>
             <div className="hero-actions">
-              <button className="button button-dark button-large" type="button" onClick={() => startBooking()}>
-                Explore booking <ArrowRight size={17} />
-              </button>
-              <a className="button button-light button-large" href="#treatments">Explore the menu</a>
+              <a className="button button-dark button-large" href={LIVE_BOOKING_PROVIDER.bookingUrl} target="_blank" rel="noopener noreferrer">
+                Book live on Treatwell <ArrowRight size={17} />
+              </a>
+              <button className="button button-light button-large" type="button" onClick={() => startBooking()}>Preview the new flow</button>
             </div>
             <div className="hero-details">
               <span><MapPin size={16} /> West Kensington · London</span>
@@ -666,15 +666,15 @@ function App() {
             </div>
           </div>
 
-          <div className="availability-card" aria-label="Prototype booking flow">
+          <div className="availability-card" aria-label="Current live booking calendar">
             <div className="pulse-dot" />
             <div>
-              <small>Prototype booking flow</small>
-              <strong>Try sample dates and times</strong>
+              <small>Current live calendar</small>
+              <strong>See availability on Treatwell</strong>
             </div>
-            <button type="button" aria-label="Open booking prototype" onClick={() => startBooking()}>
+            <a href={LIVE_BOOKING_PROVIDER.bookingUrl} target="_blank" rel="noopener noreferrer" aria-label="Open Earth Glory live booking on Treatwell">
               <ArrowRight size={18} />
-            </button>
+            </a>
           </div>
         </section>
 
@@ -685,13 +685,26 @@ function App() {
           <div><Heart size={21} /><span><strong>Personal service</strong><small>Treatment provided by Avni</small></span></div>
         </section>
 
+        <section className="booking-transition" aria-labelledby="booking-transition-title">
+          <div className="booking-transition-icon"><ShieldCheck size={24} /></div>
+          <div className="booking-transition-copy">
+            <span>Safe transition</span>
+            <h2 id="booking-transition-title">One live calendar while Earth Glory evolves.</h2>
+            <p>Earth Glory currently uses Treatwell as its live booking calendar. Bookings started from this website and bookings made directly on Treatwell should continue into that same calendar. The new Earth Glory flow below remains a feedback prototype and is not connected to Treatwell.</p>
+          </div>
+          <div className="booking-transition-actions">
+            <a className="button button-dark" href={LIVE_BOOKING_PROVIDER.bookingUrl} target="_blank" rel="noopener noreferrer">Book live with Treatwell <ArrowRight size={16} /></a>
+            <button className="transition-demo-link" type="button" onClick={() => startBooking()}>Try the session-only demo</button>
+          </div>
+        </section>
+
         <section className="section treatment-section" id="treatments">
           <div className="section-heading treatment-heading">
             <div>
               <div className="eyebrow dark"><span /> Current service highlights</div>
               <h2>Find the right treatment for you.</h2>
             </div>
-            <p>Browse a sample of the treatment menu. Prices and availability remain draft until Earth Glory confirms the launch catalogue.</p>
+            <p>Browse a sample of the proposed menu. Use the Treatwell link above for current live services, prices and availability.</p>
           </div>
 
           <div className="category-tabs" role="list" aria-label="Treatment categories">
@@ -727,9 +740,9 @@ function App() {
                       <strong>{formatMoney(service.price)}</strong>
                       <span><Clock3 size={14} /> {service.duration} min + {service.bufferAfter} min reset</span>
                     </div>
-                    <button type="button" onClick={() => startBooking(service)} aria-label={`Select ${service.name}`}>
-                      Select <ArrowRight size={16} />
-                    </button>
+                    <a href={LIVE_BOOKING_PROVIDER.bookingUrl} target="_blank" rel="noopener noreferrer" aria-label={`Check current ${service.name} availability on Treatwell`}>
+                      Check live <ArrowRight size={16} />
+                    </a>
                   </div>
                 </article>
               )
@@ -768,9 +781,9 @@ function App() {
               <span><CheckCircle2 size={17} /> 14+ years’ experience</span>
               <span><CheckCircle2 size={17} /> Skin & body care</span>
             </div>
-            <button className="link-arrow" type="button" onClick={() => startBooking()}>
-              Try booking with Avni <ArrowRight size={17} />
-            </button>
+            <a className="link-arrow" href={LIVE_BOOKING_PROVIDER.bookingUrl} target="_blank" rel="noopener noreferrer">
+              Book with Avni on Treatwell <ArrowRight size={17} />
+            </a>
           </div>
           <div className="portrait-card">
             <div className="portrait-art">
@@ -803,15 +816,15 @@ function App() {
             <div className="visit-copy">
               <div className="eyebrow light"><span /> Plan your visit</div>
               <h2>West Kensington,<br />London.</h2>
-              <p>Venue details are shown for prototype feedback and will be confirmed before live booking opens.</p>
+              <p>Venue details are shown for prototype feedback. Check Treatwell or contact Earth Glory directly before a live visit.</p>
               <div className="visit-facts">
                 <div><MapPin size={18} /><span><strong>141 North End Road</strong><small>West Kensington, London W14 9NH</small></span></div>
                 <div><Clock3 size={18} /><span><strong>Sample opening hours</strong><small>{operatingHoursSummary(demoState.operatingHours)}</small></span></div>
                 <div><MessageCircle size={18} /><span><strong>Questions before booking?</strong><small>Call 07745 241200 or email Earth Glory</small></span></div>
               </div>
-              <button className="button button-cream button-large" type="button" onClick={() => startBooking()}>
-                Try the booking prototype <ArrowRight size={17} />
-              </button>
+              <a className="button button-cream button-large" href={LIVE_BOOKING_PROVIDER.bookingUrl} target="_blank" rel="noopener noreferrer">
+                Open live Treatwell booking <ArrowRight size={17} />
+              </a>
             </div>
             <div className="visit-map" aria-hidden="true">
               <div className="map-road road-one" />
@@ -828,8 +841,8 @@ function App() {
         <section className="section faq-section" id="faq">
           <div className="faq-intro">
             <div className="eyebrow dark"><span /> Before you book</div>
-            <h2>Details being finalised<br />before booking opens.</h2>
-            <p>Earth Glory will confirm these details before the site accepts real bookings.</p>
+            <h2>Useful details<br />before you book.</h2>
+            <p>Treatwell is Earth Glory’s current live booking calendar. The answers below distinguish current booking information from details still awaiting owner confirmation.</p>
             <a href="mailto:earth.glory14@gmail.com"><Mail size={16} /> Email Earth Glory</a>
           </div>
           <div className="faq-list">
@@ -860,13 +873,13 @@ function App() {
           <div><strong>Useful</strong><a href="#visit">Visit & access</a><a href="#faq">Before you book</a></div>
           <div><strong>Contact</strong><p>141 North End Road, West Kensington, London W14 9NH</p><a href="tel:+447745241200">07745 241200</a><a href="mailto:earth.glory14@gmail.com">earth.glory14@gmail.com</a></div>
         </div>
-        <div className="footer-bottom"><span>© 2026 Earth Glory website concept</span><span>Owner review</span><span>No live booking or payment</span></div>
+        <div className="footer-bottom"><span>© 2026 Earth Glory website concept</span><span>Owner review</span><span>Demo data only · Treatwell handles live bookings</span></div>
       </footer>
 
-      <button className="mobile-book" type="button" onClick={() => startBooking()}>
-        <span><small>Prototype flow</small>Sample booking</span>
-        <strong>Try it <ArrowRight size={16} /></strong>
-      </button>
+      <a className="mobile-book" href={LIVE_BOOKING_PROVIDER.bookingUrl} target="_blank" rel="noopener noreferrer">
+        <span><small>Current live calendar</small>Book with Earth Glory</span>
+        <strong>Treatwell <ArrowRight size={16} /></strong>
+      </a>
 
         </>
       ) : (
@@ -1035,9 +1048,9 @@ function BookingDialog({
         {submitted ? (
           <div className="booking-success">
             <div className="success-icon"><Check size={28} /></div>
-            <div className="eyebrow dark"><span /> Connected prototype</div>
-            <h2 ref={successTitleRef} id="booking-dialog-title" tabIndex="-1">{mode === 'reschedule' ? 'Your demo visit has moved.' : 'Your demo booking is ready.'}</h2>
-            <p id="booking-dialog-description">This session-only appointment now appears in the Client, Practitioner and Owner views. Nothing was charged or sent, and refreshing the page restores the original sample.</p>
+            <div className="eyebrow dark"><span /> Preview complete</div>
+            <h2 ref={successTitleRef} id="booking-dialog-title" tabIndex="-1">{mode === 'reschedule' ? 'Change preview complete—Treatwell was not updated.' : 'No appointment was booked.'}</h2>
+            <p id="booking-dialog-description">This sample now appears in the Client, Practitioner and Owner prototype views so you can review the proposed workflow. Treatwell remains Earth Glory’s live calendar; nothing was charged, submitted or sent.</p>
             <div className="success-card">
               <div><small>Reference</small><strong>{completedAppointment?.reference}</strong></div>
               <div><small>Treatment</small><strong>{completedAppointment?.service.name}</strong></div>
@@ -1045,18 +1058,18 @@ function BookingDialog({
               <div><small>Therapist</small><strong>{practitioner.name}</strong></div>
               <div><small>Payment</small><strong>{completedAppointment && formatMoney(completedAppointment.service.price)} due at venue · simulated</strong></div>
             </div>
-            <div className="success-records" aria-label="Records a live booking may create">
-              <strong>What changed in this browser session</strong>
+            <div className="success-records" aria-label="Records changed in this prototype session">
+              <strong>What changed in this prototype session</strong>
               <div>
-                <span><CheckCircle2 size={15} /> Client can manage this appointment</span>
-                <span><CheckCircle2 size={15} /> Practitioner sees the same time</span>
-                <span><CheckCircle2 size={15} /> Owner sees the same status and balance</span>
-                <span><CheckCircle2 size={15} /> Availability now treats the time as occupied</span>
+                <span><CheckCircle2 size={15} /> Client can manage this sample</span>
+                <span><CheckCircle2 size={15} /> Practitioner sees the same sample time</span>
+                <span><CheckCircle2 size={15} /> Owner sees the same demo status and balance</span>
+                <span><CheckCircle2 size={15} /> Sample availability treats the time as occupied</span>
               </div>
             </div>
             <div className="success-actions full-width">
-              <button className="button button-dark button-large" type="button" onClick={onManage}>Manage this demo booking</button>
-              <button className="button button-light button-large" type="button" onClick={onClose}>Return to website</button>
+              <a className="button button-dark button-large" href={LIVE_BOOKING_PROVIDER.bookingUrl} target="_blank" rel="noopener noreferrer">Book for real on Treatwell</a>
+              <button className="button button-light button-large" type="button" onClick={onManage}>Follow this sample across views</button>
             </div>
             <small className="demo-note">Session-only demo — no appointment, payment, email or SMS was created.</small>
           </div>
@@ -1066,6 +1079,7 @@ function BookingDialog({
               <div className="booking-progress-mobile" aria-live="polite">
                 <span>Step {step} of 4</span><strong>{['Treatment', 'Date & time', 'Your details', 'Review'][step - 1]}</strong>
               </div>
+              <div className="booking-preview-warning"><ShieldCheck size={18} /><span><strong>Preview only</strong>These are sample services and times, not Treatwell availability. No real appointment will be created.</span></div>
 
               {step === 1 && (
                 <div className="booking-step">
@@ -1094,7 +1108,7 @@ function BookingDialog({
                 <div className="booking-step">
                   <div className="eyebrow dark"><span /> Step two</div>
                   <h2 ref={stepTitleRef} id="booking-dialog-title" tabIndex="-1">{mode === 'reschedule' ? 'Choose a new time.' : 'Choose a date and time.'}</h2>
-                  <p id="booking-dialog-description" className="step-intro">Times are calculated from Earth Glory’s opening hours, Avni’s working hours, treatment length, reset time, appointments, breaks and blocked time.</p>
+                  <p id="booking-dialog-description" className="step-intro">Sample times are calculated from the prototype’s opening hours, Avni’s working hours, treatment length, reset time, appointments, breaks and blocked time.</p>
                   <div className="date-strip">
                     {dates.map((item) => (
                       <button
@@ -1125,8 +1139,8 @@ function BookingDialog({
                       </button>
                     ))}
                   </div>
-                  {availability.slots.length === 0 && <div className="booking-help"><Clock3 size={18} /><p><strong>No online times on this day.</strong>Earth Glory may be closed or Avni may be unavailable. Select another date to continue.</p></div>}
-                  {selectedSlot?.available && <div className="booking-help"><Clock3 size={18} /><p><strong>{formatClockTime(selectedSlot.start)}–{formatClockTime(selectedSlot.end)} treatment.</strong>The calendar remains protected until {formatClockTime(selectedSlot.blockedEnd)} including {service.bufferAfter} minutes to reset the room.</p></div>}
+                  {availability.slots.length === 0 && <div className="booking-help"><Clock3 size={18} /><p><strong>No sample times on this day.</strong>Select another date to continue the preview. Check Treatwell for current live availability.</p></div>}
+                  {selectedSlot?.available && <div className="booking-help"><Clock3 size={18} /><p><strong>{formatClockTime(selectedSlot.start)}–{formatClockTime(selectedSlot.end)} sample treatment.</strong>The prototype protects the time until {formatClockTime(selectedSlot.blockedEnd)}, including {service.bufferAfter} minutes to reset the room.</p></div>}
                 </div>
               )}
 
@@ -1150,7 +1164,7 @@ function BookingDialog({
                 <div className="booking-step">
                   <div className="eyebrow dark"><span /> Final step</div>
                   <h2 ref={stepTitleRef} id="booking-dialog-title" tabIndex="-1">Review before you finish.</h2>
-                  <p id="booking-dialog-description" className="step-intro">This is the point where a live service would show the complete order, policy and payment commitment.</p>
+                  <p id="booking-dialog-description" className="step-intro">This previews the point where a live service would show the complete order, policy and payment commitment.</p>
                   <div className="booking-review">
                     <dl>
                       <div><dt>Service provider</dt><dd>Earth Glory · {practitioner.name}</dd></div>
@@ -1207,7 +1221,7 @@ function BookingDialog({
                 onClick={step === 3 ? undefined : goNext}
                 disabled={(step === 2 && !resolvedTime) || (step === 4 && !policyAccepted)}
               >
-                {step === 4 ? (mode === 'reschedule' ? 'Save demo change' : 'Confirm demo booking') : 'Continue'} <ArrowRight size={16} />
+                {step === 4 ? (mode === 'reschedule' ? 'Finish change preview' : 'Finish preview') : 'Continue'} <ArrowRight size={16} />
               </button>
             </div>
           </>
