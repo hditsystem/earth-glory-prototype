@@ -16,6 +16,7 @@ A polished, responsive, non-transactional front-end concept for Earth Glory.
 - Responsive desktop/mobile layouts and persistent mobile booking action
 - Keyboard-friendly controls, trapped and restored modal focus, reduced-motion support and semantic landmarks
 - Original generated hero artwork bundled through `src/assets`
+- Owner-supplied lotus identity refined into a transparent, web-optimised PNG and used consistently across public, booking and workspace surfaces
 - Four connected feedback views using one shared sample appointment:
   1. Guest discovery and no-account booking
   2. Client appointment self-service, receipts and preferences

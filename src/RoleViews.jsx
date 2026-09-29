@@ -34,6 +34,8 @@ import {
   X,
 } from 'lucide-react'
 
+const lotusLogo = `${import.meta.env.BASE_URL}earth-glory-lotus-logo.png`
+
 const prototypeRoles = [
   { id: 'guest', label: 'Guest', detail: 'Discover and book' },
   { id: 'client', label: 'Client', detail: 'Manage my visits' },
@@ -162,7 +164,7 @@ export function RoleWorkspace({ role, onStartBooking }) {
     <div className="workspace-shell">
       <aside className={mobileNavOpen ? 'workspace-sidebar open' : 'workspace-sidebar'}>
         <div className="workspace-brand">
-          <span className="workspace-brand-mark">EG</span>
+          <span className="workspace-brand-mark workspace-brand-logo"><img src={lotusLogo} alt="" width="256" height="256" aria-hidden="true" /></span>
           <span><strong>Earth Glory</strong><small>{config.eyebrow}</small></span>
           <button className="workspace-nav-close" type="button" aria-label="Close navigation" onClick={() => setMobileNavOpen(false)}><X size={20} /></button>
         </div>
@@ -192,6 +194,7 @@ export function RoleWorkspace({ role, onStartBooking }) {
       <div className="workspace-content">
         <header className="workspace-topbar">
           <button className="workspace-menu" type="button" aria-label="Open navigation" onClick={() => setMobileNavOpen(true)}><Menu size={21} /></button>
+          <div className="workspace-mobile-brand" aria-hidden="true"><img src={lotusLogo} alt="" width="256" height="256" /><strong>Earth Glory</strong></div>
           <div className="workspace-search"><Search size={17} /><span>Search sample records</span><kbd>⌘ K</kbd></div>
           <div className="workspace-top-actions">
             <button type="button" aria-label="Sample notifications"><Bell size={19} /><span /></button>

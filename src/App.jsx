@@ -23,6 +23,7 @@ import heroImage from './assets/earth-glory-hero.png'
 import { RoleSwitcher, RoleWorkspace } from './RoleViews'
 
 const prototypeRoleIds = ['guest', 'client', 'practitioner', 'owner']
+const lotusLogo = `${import.meta.env.BASE_URL}earth-glory-lotus-logo.png`
 
 const services = [
   {
@@ -228,7 +229,7 @@ function App() {
         <>
       <header className="site-header">
         <a className="brand" href="#top" aria-label="Earth Glory home">
-          <span className="brand-mark">EG</span>
+          <span className="brand-mark brand-logo"><img src={lotusLogo} alt="" width="256" height="256" aria-hidden="true" /></span>
           <span className="brand-copy">
             <strong>Earth Glory</strong>
             <small>Beauty · Massage · Nails</small>
@@ -469,7 +470,7 @@ function App() {
 
       <footer className="site-footer">
         <div className="footer-brand">
-          <span className="brand-mark light-mark">EG</span>
+          <span className="brand-mark brand-logo light-mark"><img src={lotusLogo} alt="" width="256" height="256" aria-hidden="true" /></span>
           <div><strong>Earth Glory</strong><small>Beauty · Massage · Nails</small></div>
         </div>
         <div className="footer-links">
@@ -723,7 +724,7 @@ function BookingDialog({ initialService, visitorType = 'guest', onClose }) {
                 <div
                   className="summary-art"
                   style={{ backgroundImage: `linear-gradient(145deg, rgba(97,68,53,.15), rgba(255,255,255,.38)), url(${heroImage})` }}
-                ><span>EG</span></div>
+                ><span className="summary-brand-logo"><img src={lotusLogo} alt="" width="256" height="256" aria-hidden="true" /></span></div>
                 <h3>{service.name}</h3>
                 <ul>
                   <li><Clock3 size={16} /><span><small>Duration</small><strong>{service.duration} minutes</strong></span></li>
