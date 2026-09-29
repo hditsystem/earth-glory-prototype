@@ -249,3 +249,324 @@ button.schedule-item.active { cursor: pointer; }
   .dialog-form-grid { grid-template-columns: 1fr; }
   .dialog-field.full { grid-column: 1; }
 }
+
+/* Readable application type scale: 16px body, 14px controls, 12px metadata. */
+.role-switcher { min-height: 88px; }
+.role-switcher-intro strong { font-size: 17px; }
+.role-switcher-intro span,
+.role-demo-note,
+.role-demo-note button,
+.role-option small { font-size: var(--text-caption); line-height: 1.4; }
+.role-switcher-intro span,
+.role-demo-note { color: var(--muted-on-light); }
+.role-option:not(.active) small { color: var(--muted-on-light); }
+.flow-strip i { color: #685d56; }
+.role-option { min-height: 56px; }
+.role-option span { font-size: var(--text-control); }
+
+.workspace-shell {
+  min-height: calc(100dvh - 119px);
+  grid-template-columns: 260px minmax(0, 1fr);
+}
+.workspace-sidebar {
+  min-height: calc(100dvh - 119px);
+  height: calc(100dvh - 119px);
+  overflow-y: auto;
+}
+.workspace-brand small,
+.permission-card strong,
+.permission-card small,
+.workspace-identity small,
+.workspace-search kbd,
+.workspace-eyebrow,
+.flow-label,
+.flow-strip > div > span,
+.flow-strip i,
+.stat-card > span,
+.stat-card > small,
+.panel-title small,
+.status-pill,
+.card-heading > span,
+.appointment-date-block span,
+.appointment-main-copy small,
+.quick-actions-panel small,
+.attention-panel small,
+.journey-list small,
+.balance-panel > p,
+.appointment-detail-date span,
+.appointment-detail-date small,
+.appointment-detail-price small,
+.appointment-detail-price span,
+.preferences-panel small,
+.schedule-item small,
+.client-brief-person small,
+.client-brief-panel dt,
+.owner-timeline-row > div small,
+.bar-chart small,
+.access-panel p small,
+.record-head,
+.person-row small,
+.person-row em,
+.calendar-times,
+.calendar-day > strong,
+.calendar-event small,
+.service-admin-row > div small,
+.service-admin-row > span:nth-child(3),
+.team-card > div:nth-child(2) > span,
+.setting-card small,
+.hours-row label,
+.hours-row > span,
+.rules-card dt,
+.dialog-summary dt,
+.activity-list small {
+  font-size: var(--text-caption);
+  line-height: 1.45;
+}
+
+.workspace-nav button,
+.workspace-primary,
+.workspace-secondary,
+.workspace-danger,
+.workspace-text-danger,
+.secondary-action-row button,
+.segmented-tabs button,
+.panel-title button,
+.workspace-search,
+.workspace-identity strong,
+.workspace-avatar,
+.workspace-top-avatar,
+.person-avatar,
+.prototype-boundary,
+.workspace-notice,
+.appointment-main-copy p,
+.quick-actions-panel strong,
+.attention-panel strong,
+.journey-list strong,
+.balance-row,
+.balance-total,
+.appointment-detail-copy p,
+.appointment-detail-copy > small,
+.info-note p,
+.info-note strong,
+.mock-form label,
+.preferences-panel strong,
+.schedule-item time,
+.schedule-item > div > strong,
+.schedule-copy > strong,
+.schedule-item > strong,
+.client-brief-panel dd,
+.client-brief-person > span,
+.prep-note p,
+.owner-timeline-row time,
+.owner-timeline-row > div strong,
+.owner-timeline-row > b,
+.access-panel p strong,
+.access-panel p,
+.record-row,
+.record-row > strong,
+.person-row strong,
+.calendar-controls,
+.calendar-event,
+.service-admin-row > div strong,
+.service-admin-row > strong,
+.team-card p,
+.setting-card strong,
+.empty-state p,
+.hours-row,
+.hours-row > strong,
+.rules-card dd,
+.availability-example p,
+.availability-example strong,
+.prototype-dialog > header p,
+.dialog-summary dd,
+.dialog-section > p,
+.activity-list strong,
+.dialog-warning p,
+.dialog-field {
+  font-size: var(--text-control);
+  line-height: 1.5;
+}
+
+.workspace-heading p { color: var(--muted-on-light); font-size: var(--text-body); line-height: 1.55; }
+.panel-title span { font-size: 18px; }
+.appointment-main-copy h2 { font-size: 26px; }
+.mock-form input,
+.dialog-field input,
+.dialog-field select,
+.dialog-field textarea,
+.hours-row input[type='time'] { font-size: var(--text-body); }
+
+.workspace-nav button,
+.workspace-primary,
+.workspace-secondary,
+.workspace-danger,
+.secondary-action-row button,
+.segmented-tabs button,
+.panel-title button,
+.calendar-controls button,
+.hours-row input[type='time'] { min-height: 44px; }
+.workspace-text-danger {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+.workspace-menu,
+.workspace-nav-close { width: 44px; height: 44px; }
+.calendar-controls button { min-width: 44px; }
+.status-pill { min-height: 28px; }
+.status-pill { color: #52664c; }
+.status-sand { color: #79513f; }
+.status-rose { color: #7d4440; }
+.status-plain { color: #655b55; }
+.card-heading > .status-pill { color: #52664c; }
+.card-heading > .status-sand { color: #79513f; }
+.card-heading > .status-rose { color: #7d4440; }
+.card-heading > .status-plain { color: #655b55; }
+.panel-title,
+.workspace-heading,
+.heading-actions,
+.appointment-actions,
+.prototype-dialog > footer { flex-wrap: wrap; }
+.segmented-tabs { max-width: 100%; overflow-x: auto; }
+.segmented-tabs button { flex: 0 0 auto; color: #6b5e56; white-space: nowrap; }
+.segmented-tabs span { color: #655951; }
+.flow-strip > div { min-width: 700px; }
+
+.quick-actions-panel > button,
+.quick-actions-panel > a,
+.attention-panel > button { min-height: 86px; }
+.journey-list > div { min-height: 68px; }
+.schedule-item { min-height: 88px; }
+.owner-timeline-row { min-height: 84px; }
+.service-admin-row { min-height: 82px; }
+.setting-card { min-height: 112px; }
+.client-brief-panel dl > div { min-height: 48px; flex-wrap: wrap; }
+.record-table-panel { overflow-x: auto; }
+.record-table { min-width: 800px; }
+.record-head { min-height: 44px; }
+.record-row { min-height: 58px; }
+.record-row button { width: 44px; height: 44px; }
+
+.calendar-grid {
+  min-width: 900px;
+  height: 590px;
+  grid-template-columns: 68px repeat(5, 1fr);
+}
+.calendar-day {
+  background: repeating-linear-gradient(to bottom, transparent, transparent 94px, #eee8e4 95px);
+}
+.calendar-day > strong small { font-size: var(--text-control); }
+.calendar-event { padding: 8px; gap: 4px; line-height: 1.25; }
+.calendar-event small { color: #70655f; }
+.calendar-controls,
+.hours-row > span { color: var(--muted-on-light); }
+.appointment-detail-date span,
+.appointment-detail-date small { color: #6d6059; }
+.balance-row span { color: var(--muted-on-light); }
+.schedule-item.blocked { color: var(--muted-on-light); }
+
+.workspace-search,
+.prototype-boundary,
+.workspace-notice,
+.workspace-eyebrow,
+.flow-label,
+.flow-strip > div > span,
+.flow-strip i,
+.stat-card > span,
+.stat-card > small,
+.panel-title small,
+.quick-actions-panel small,
+.attention-panel small,
+.journey-list small,
+.balance-panel > p,
+.appointment-detail-date span,
+.appointment-detail-date small,
+.appointment-detail-copy > small,
+.appointment-detail-price small,
+.appointment-detail-price span,
+.preferences-panel small,
+.schedule-item small,
+.client-brief-person small,
+.client-brief-panel dt,
+.owner-timeline-row > div small,
+.bar-chart small,
+.access-panel p small,
+.record-head,
+.person-row small,
+.calendar-times,
+.service-admin-row > div small,
+.service-admin-row > span:nth-child(3),
+.team-card > div:nth-child(2) > span,
+.setting-card small,
+.rules-card dt,
+.prototype-dialog > header p,
+.dialog-summary dt,
+.activity-list small { color: var(--muted-on-light); }
+.access-panel > p { color: #6e615a; }
+.appointment-detail-date span,
+.appointment-detail-date small { color: #6d6059; }
+
+.hours-row { min-height: 70px; grid-template-columns: 95px 90px minmax(120px, 1fr) auto minmax(120px, 1fr); }
+.hours-row input[type='time'] { height: 44px; }
+.rules-card dl > div { min-height: 58px; }
+.availability-example { align-items: flex-start; }
+.prototype-dialog { width: min(720px, calc(100vw - 32px)); }
+.dialog-summary > div { min-height: 58px; grid-template-columns: minmax(110px, .7fr) 1fr; }
+
+@media (max-width: 1100px) {
+  .role-demo-note { display: none; }
+  .workspace-shell { grid-template-columns: 230px minmax(0, 1fr); }
+  .workspace-sidebar { width: 230px; }
+  .quick-actions-panel > a { min-height: 92px; grid-template-columns: auto 1fr; }
+  .quick-actions-panel > a > svg { display: none; }
+}
+
+@media (max-width: 820px) {
+  .role-switcher { min-height: 120px; }
+  .workspace-shell { display: block; min-height: calc(100dvh - 151px); }
+  .workspace-sidebar { width: 280px; height: 100dvh; min-height: 100dvh; }
+  .hours-card { overflow-x: auto; }
+  .hours-list { min-width: 700px; }
+}
+
+@media (max-width: 560px) {
+  .role-options {
+    margin: 0 -2px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    overflow: visible;
+  }
+  .role-option { min-width: 0; min-height: 48px; padding: 7px 4px; align-items: center; }
+  .role-option span { font-size: var(--text-caption); }
+  .stats-grid.four,
+  .stats-grid.three { grid-template-columns: 1fr; }
+  .appointment-actions,
+  .appointment-detail-buttons,
+  .heading-actions { grid-template-columns: 1fr; }
+  .appointment-actions > *,
+  .appointment-detail-buttons > *,
+  .heading-actions > * { width: 100%; }
+  .appointment-actions .workspace-text-danger { margin: 4px 0 0; }
+  .owner-timeline-row { grid-template-columns: 52px 36px 1fr auto; }
+  .schedule-item { grid-template-columns: 52px 2px 1fr; }
+  .prototype-dialog > footer { align-items: stretch; }
+  .prototype-dialog > footer > button { flex: 1 1 100%; }
+  .dialog-summary > div { padding: 12px 0; grid-template-columns: 1fr; gap: 5px; }
+  .dialog-summary dd { text-align: left; }
+  .hours-card { overflow: hidden; }
+  .hours-list { min-width: 0; }
+  .hours-row {
+    min-height: auto;
+    padding: 14px 0;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .hours-row > strong { grid-column: 1; }
+  .hours-row label { grid-column: 2; justify-self: end; }
+  .hours-row input[type='time'] { width: 100%; }
+  .hours-row > span { display: none; }
+}
+
+@media (max-width: 340px) {
+  .role-options { grid-template-columns: 1fr 1fr; }
+  .role-switcher { min-height: auto; }
+}

@@ -13,6 +13,11 @@
   --rose: #bf7c74;
   --sage: #78856e;
   --line: rgba(41, 32, 26, 0.14);
+  --text-body: 16px;
+  --text-control: 14px;
+  --text-caption: 12px;
+  --muted-on-light: #70645d;
+  --muted-on-sand: #70655f;
 }
 
 * { box-sizing: border-box; }
@@ -333,4 +338,108 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 
 @media (max-width: 720px) {
   .success-actions { grid-template-columns: 1fr; }
+}
+
+/* Readable type scale for the booking journey. Editorial display type stays unchanged. */
+.booking-dialog {
+  width: min(1200px, 96vw);
+  height: min(860px, 94dvh);
+  grid-template-rows: 1fr 82px;
+}
+
+.booking-dialog .eyebrow,
+.booking-progress-mobile,
+.choice-copy small,
+.choice-copy em,
+.practitioner-choice em,
+.practitioner-choice small,
+.date-strip small,
+.date-strip span,
+.time-grid button:disabled small,
+.booking-review dt,
+.summary-kicker,
+.booking-summary li small,
+.success-card small,
+.demo-note {
+  font-size: var(--text-caption);
+  line-height: 1.4;
+}
+
+.step-intro,
+.booking-success > p {
+  font-size: var(--text-body);
+  line-height: 1.6;
+}
+
+.booking-step h2 { font-size: clamp(36px, 3.5vw, 48px); }
+.booking-dialog .eyebrow.dark { color: #8b5e4c; }
+.choice { min-height: 102px; }
+.choice-copy strong,
+.choice-price,
+.practitioner-choice strong { font-size: var(--text-body); }
+.choice-copy small {
+  max-width: none;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  color: var(--muted-on-light);
+}
+.choice-copy em,
+.practitioner-choice em,
+.practitioner-choice small { color: #755b4e; }
+
+.booking-help p,
+.time-label,
+.time-grid button,
+.checkbox-label,
+.secure-note > span,
+.secure-note strong,
+.booking-review dd,
+.review-policy p,
+.review-policy strong,
+.policy-check,
+.booking-summary li strong,
+.summary-total div,
+.back-button,
+.booking-footer .button,
+.success-card strong,
+.success-records > strong,
+.success-records span {
+  font-size: var(--text-control);
+  line-height: 1.5;
+}
+
+.time-grid button { min-height: 64px; }
+.time-label > small { color: #52664c; font-size: inherit; }
+.time-grid button:disabled { color: var(--muted-on-light); }
+.details-form label { font-size: var(--text-control); line-height: 1.45; }
+.details-form input:not([type='checkbox']) { height: 50px; font-size: var(--text-body); }
+.booking-summary { overflow-y: auto; }
+.booking-summary li small,
+.summary-kicker { color: var(--muted-on-sand); }
+.booking-summary .summary-total div { color: #685b54; }
+.booking-review dt,
+.secure-note > span,
+.success-card small,
+.demo-note { color: var(--muted-on-light); }
+.dialog-close { width: 44px; height: 44px; }
+
+@media (max-width: 1000px) {
+  .booking-dialog { grid-template-columns: minmax(0, 1fr) 310px; }
+}
+
+@media (max-width: 760px) {
+  .booking-dialog {
+    width: 100%;
+    height: 100dvh;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 76px;
+  }
+  .booking-main { padding-left: 20px; padding-right: 20px; }
+  .service-choice-list .choice { min-height: 104px; }
+  .choice-copy small { max-width: none; }
+  .choice-price { font-size: var(--text-body); }
+  .mobile-book > span,
+  .mobile-book strong { font-size: var(--text-control); }
+  .mobile-book small { font-size: var(--text-caption); }
 }

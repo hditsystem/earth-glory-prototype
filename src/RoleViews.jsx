@@ -646,8 +646,9 @@ function addDaysToKey(dateKey, days) {
 
 function WeekCalendar({ personal = false, appointment, appointments, blocks, onOpenDetail }) {
   const dateKeys = Array.from({ length: 5 }, (_, index) => addDaysToKey(appointment.dateKey, index))
-  const positionForTime = (time) => 47 + Math.max(0, ((parseClockTime(time) - 540) / 660) * 350)
-  const heightForDuration = (duration) => Math.max(34, (duration / 660) * 350)
+  const calendarScale = 520
+  const positionForTime = (time) => 47 + Math.max(0, ((parseClockTime(time) - 540) / 660) * calendarScale)
+  const heightForDuration = (duration) => Math.max(52, (duration / 660) * calendarScale)
 
   return (
     <article className="panel week-calendar">
